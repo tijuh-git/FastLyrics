@@ -20,6 +20,12 @@
             android:orientation="vertical">
 
             <include
+                android:id="@+id/header"
+                layout="@layout/layout_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <include
                 android:id="@+id/error_view"
                 layout="@layout/layout_error"
                 android:layout_width="match_parent"

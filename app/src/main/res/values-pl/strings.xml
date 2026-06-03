@@ -17,6 +17,7 @@
     <string name="lyrics_unknown_error">Wystąpił nieznany błąd</string>
 
     <string name="lyrics_provider_over_line">Dostawcą tekstu jest</string>
+    <string name="synced_lyrics_available">Dostępny jest zsynchronizowany tekst</string>
 
     <string name="copy" tools:override="true">Kopiuj</string>
     <string name="lyrics_clipboard_label">Tekst</string>
@@ -27,6 +28,9 @@
     <!-- Saved songs view -->
     <string name="delete">Usuń</string>
     <plurals name="items_selected">
+        <item quantity="one">%d wybrano</item>
+        <item quantity="few">%d wybrano</item>
+        <item quantity="many">%d wybrano</item>
         <item quantity="other">%d wybrano</item>
     </plurals>
 
@@ -38,10 +42,13 @@
 
     <!-- Settings -->
     <string name="appearance_header">Wygląd</string>
+    <string name="behavior_header">Zachowanie</string>
     <string name="preference_material_style">Material Style</string>
     <string name="preference_app_theme">Motyw aplikacji</string>
     <string name="preference_auto_refresh">Automatyczne odświeżanie</string>
     <string name="preference_auto_refresh_description">Automatycznie odśwież tekst po zmianie odtwarzanego utworu</string>
+    <string name="preference_text_size">Rozmiar tekstu tekstów</string>
+    <string name="preference_synced_lyrics_by_default">Synchronizowane teksty domyślnie</string>
 
     <!-- About -->
     <string name="source_code">Kod źródłowy</string>

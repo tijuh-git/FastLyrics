@@ -17,20 +17,22 @@
     <string name="lyrics_unknown_error">C\'è stato un errore sconosciuto</string>
 
     <string name="lyrics_provider_over_line">Testo da</string>
+    <string name="synced_lyrics_available">Testo sincronizzato disponibile</string>
 
     <string tools:override="true" name="copy">Copia</string>
     <string name="lyrics_clipboard_label">Testo</string>
 
     <string name="share">Condividi</string>
     <string name="share_title">Testo di %1$s - %2$s</string>
-    
+
     <!-- Saved songs view -->
     <string name="delete">Elimina</string>
     <plurals name="items_selected">
         <item quantity="one">%d selezionato</item>
+        <item quantity="many">%d selezionati</item>
         <item quantity="other">%d selezionati</item>
     </plurals>
-    
+
     <!-- Notification permissions -->
     <string name="permission_description">FastLyrics ha bisogno dell\'accesso alle notifiche del tuo dispositivo per scoprire qual è il brano in riproduzione. Puoi concedere il permesso nelle impostazioni cliccando sul bottone sottostante</string>
     <string name="permission_tip">Suggerimento: nelle nuove versioni di Android puoi fare le singole selezioni a cosa FastLyrics può avere accesso. Puoi deselezionare tutto in quanto attualmente FastLyrics non ha accesso ad alcuna notifica</string>
@@ -39,10 +41,13 @@
 
     <!-- Settings -->
     <string name="appearance_header">Aspetto</string>
+    <string name="behavior_header">Comportamento</string>
     <string name="preference_material_style">Stile Material</string>
     <string name="preference_app_theme">Tema dell\'app</string>
     <string name="preference_auto_refresh">Auto-aggiornamento dei testi</string>
     <string name="preference_auto_refresh_description">Aggiorna automaticamente il testo quando cambia la canzone</string>
+    <string name="preference_text_size">Dimensione del testo dei testi</string>
+    <string name="preference_synced_lyrics_by_default">Testo sincronizzato per impostazione predefinita</string>
 
     <!-- About -->
     <string name="source_code">Codice sorgente</string>

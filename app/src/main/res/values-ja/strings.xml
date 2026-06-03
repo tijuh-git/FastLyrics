@@ -16,9 +16,8 @@
     <string name="lyrics_network_exception">歌詞の読み込み中にネットワーク問題が発生しました</string>
     <string name="lyrics_unknown_error">不明なエラーが発生しました</string>
 
-    <string name="synced_lyrics_available">同期された歌詞が利用可能</string>
-
     <string name="lyrics_provider_over_line">からの歌詞</string>
+    <string name="synced_lyrics_available">同期歌詞を利用できます</string>
 
     <string name="copy" tools:override="true">コピー</string>
     <string name="lyrics_clipboard_label">歌詞</string>
@@ -40,10 +39,13 @@
 
     <!-- Settings -->
     <string name="appearance_header">外観</string>
+    <string name="behavior_header">動作</string>
     <string name="preference_material_style">Materialスタイル</string>
     <string name="preference_app_theme">アプリのテーマ</string>
     <string name="preference_auto_refresh">歌詞を自動更新</string>
     <string name="preference_auto_refresh_description">音楽が変更されると自動的に歌詞を更新します</string>
+    <string name="preference_text_size">歌詞の文字サイズ</string>
+    <string name="preference_synced_lyrics_by_default">同期歌詞を既定で表示</string>
 
     <!-- About -->
     <string name="source_code">ソースコード</string>

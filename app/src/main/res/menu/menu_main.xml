@@ -3,17 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_scroll_top"
+        android:title="@string/scroll_top"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_copy"
-        android:title="@string/copy"
+        android:title="@string/menu_copy"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_share"
-        android:title="@string/share"
+        android:title="@string/menu_share"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_source"
-        android:title="@string/source_genius"
+        android:title="@string/menu_source"
         app:showAsAction="never" />
 </menu>

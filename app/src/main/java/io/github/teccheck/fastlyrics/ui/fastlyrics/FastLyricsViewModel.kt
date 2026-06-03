@@ -56,7 +56,7 @@ class FastLyricsViewModel : ViewModel() {
     }
 
     private fun loadLyrics(songMeta: SongMeta) {
-        LyricsApi.getLyricsAsync(songMeta, _songWithLyrics, false)
+        LyricsApi.getLyricsAsync(songMeta, _songWithLyrics, true)
     }
 
     fun setupSongMetaListener() {

@@ -74,6 +74,8 @@ object LyricsApi {
         Log.d(TAG, "fetchLyrics($songMeta, $synced)")
         var bestResult: SearchResult? = null
         var bestResultScore = 0.0
+        var bestSyncedResult: SearchResult? = null
+        var bestSyncedResultScore = 0.0
 
         for (provider in providers) {
             val search = provider.search(songMeta)
@@ -86,9 +88,14 @@ object LyricsApi {
                 bestResult = result
                 bestResultScore = score
             }
+
+            if (synced && result.songWithLyrics?.lyricsSynced != null && score > bestSyncedResultScore) {
+                bestSyncedResult = result
+                bestSyncedResultScore = score
+            }
         }
 
-        return fetchLyrics(bestResult)
+        return fetchLyrics(if (synced) bestSyncedResult ?: bestResult else bestResult)
     }
 
     private fun fetchLyrics(searchResult: SearchResult?): Result<SongWithLyrics, LyricsApiException> {

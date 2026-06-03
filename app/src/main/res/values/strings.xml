@@ -25,6 +25,10 @@
 
     <string name="share">Share</string>
     <string name="share_title">Lyrics for %1$s - %2$s</string>
+    <string name="scroll_top" translatable="false">Haut de page</string>
+    <string name="menu_copy" translatable="false">Copy</string>
+    <string name="menu_share" translatable="false">Share</string>
+    <string name="menu_source" translatable="false">Source</string>
 
     <!-- Saved songs view -->
     <string name="delete">Delete</string>

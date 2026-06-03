@@ -16,9 +16,8 @@
     <string name="lyrics_network_exception">Es gab ein Netzwerkproblem beim Laden des Textes</string>
     <string name="lyrics_unknown_error">Unbekannter Fehler</string>
 
-    <string name="synced_lyrics_available">Synchronisierter Songtext verfügbar</string>
-
     <string name="lyrics_provider_over_line">Songtext von</string>
+    <string name="synced_lyrics_available">Synchronisierter Songtext verfügbar</string>
 
     <string name="copy" tools:override="true">Kopieren</string>
     <string name="lyrics_clipboard_label">Songtext</string>
@@ -29,6 +28,7 @@
     <!-- Saved songs view -->
     <string name="delete">Löschen</string>
     <plurals name="items_selected">
+        <item quantity="one">%d ausgewählt</item>
         <item quantity="other">%d ausgewählt</item>
     </plurals>
 
@@ -45,7 +45,7 @@
     <string name="preference_material_style">Material Style</string>
     <string name="preference_app_theme">App Thema</string>
     <string name="preference_auto_refresh">Songtext automatisch neu laden</string>
-    <string name="preference_auto_refresh_description">Automatically refresh lyrics when the music changes</string>
+    <string name="preference_auto_refresh_description">Songtexte automatisch aktualisieren, wenn sich die Musik ändert</string>
     <string name="preference_text_size">Textgröße für Songtexte</string>
     <string name="preference_synced_lyrics_by_default">Synchronisierte Songtexte standardmäßig anzeigen</string>
 

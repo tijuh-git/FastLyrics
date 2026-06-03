@@ -50,8 +50,8 @@ object LyricStorage {
     }
 
     fun store(song: SongWithLyrics) {
-        // Use title+artist only (not deprecated 'type') to avoid duplicates
-        if (findSong(song.title, song.artist) == null) {
+        // Keep raw/synced entries distinct so karaoke mode can coexist with plain lyrics.
+        if (findSong(song.title, song.artist, song.type) == null) {
             database.songsDao().insert(song)
         }
     }

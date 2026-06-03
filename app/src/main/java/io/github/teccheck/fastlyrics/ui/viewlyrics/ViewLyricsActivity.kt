@@ -5,20 +5,14 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
-import com.squareup.picasso.Picasso
 import dev.forkhandles.result4k.Success
 import io.github.teccheck.fastlyrics.BaseActivity
 import io.github.teccheck.fastlyrics.R
-import io.github.teccheck.fastlyrics.api.provider.LyricsProvider
 import io.github.teccheck.fastlyrics.databinding.ActivityViewLyricsBinding
 import io.github.teccheck.fastlyrics.model.SearchResult
 import io.github.teccheck.fastlyrics.model.SongWithLyrics
-import io.github.teccheck.fastlyrics.utils.PlaceholderDrawable
-import io.github.teccheck.fastlyrics.utils.Utils
-import io.github.teccheck.fastlyrics.utils.Utils.copyToClipboard
 import io.github.teccheck.fastlyrics.utils.Utils.getLyrics
 import io.github.teccheck.fastlyrics.utils.Utils.openLink
-import io.github.teccheck.fastlyrics.utils.Utils.share
 
 class ViewLyricsActivity : BaseActivity() {
 
@@ -32,8 +26,7 @@ class ViewLyricsActivity : BaseActivity() {
         setContentView(binding.root)
         setupToolbar(binding.toolbarLayout.toolbar)
 
-        binding.lyricsView.lyricViewX.visibility = View.GONE
-        binding.refresher.isEnabled = false
+        binding.refresher.isEnabled = true
         binding.refresher.setColorSchemeResources(R.color.theme_primary, R.color.theme_secondary)
 
         lyricsViewModel = ViewModelProvider(this)[ViewLyricsViewModel::class.java]
@@ -59,6 +52,17 @@ class ViewLyricsActivity : BaseActivity() {
         binding.header.textSongArtist.text = song.artist
         binding.lyricsView.textLyrics.text = song.getLyrics()
 
+        val synced = !song.lyricsSynced.isNullOrBlank()
+        binding.header.syncedLyricsAvailable.visibility = if (synced) View.VISIBLE else View.GONE
+        binding.header.syncedLyricsSwitch.isChecked = synced
+        binding.lyricsView.lyricViewX.visibility = if (synced) View.VISIBLE else View.GONE
+        binding.lyricsView.textLyrics.visibility = if (synced) View.GONE else View.VISIBLE
+
+        if (synced) {
+            binding.lyricsView.lyricViewX.loadLyric(song.lyricsSynced)
+            binding.lyricsView.lyricViewX.updateTime(0)
+        }
+
         binding.header.textSongTitle.setOnClickListener {
             openLink(this@ViewLyricsActivity, song.sourceUrl)
         }
@@ -77,7 +81,6 @@ class ViewLyricsActivity : BaseActivity() {
         }
 
     companion object {
-        private const val TAG = "ViewLyricsFragment"
         const val ARG_SONG_ID = "song_id"
         const val ARG_SEARCH_RESULT = "search_result"
     }

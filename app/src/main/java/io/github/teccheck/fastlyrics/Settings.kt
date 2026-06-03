@@ -29,12 +29,19 @@ class Settings(context: Context) {
 
     fun getTextSize(): Int = sharedPreferences.getInt(KEY_TEXT_SIZE, 18)
 
+    fun getFullscreenLyricsMode(): Boolean = sharedPreferences.getBoolean(KEY_FULLSCREEN_LYRICS, false)
+
+    fun setFullscreenLyricsMode(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_FULLSCREEN_LYRICS, enabled).apply()
+    }
+
     companion object {
         private const val KEY_APP_THEME = "app_theme"
         private const val KEY_MATERIAL_STYLE = "material_style"
         private const val KEY_AUTO_REFRESH = "auto_refresh"
         private const val KEY_SYNCED_LYRICS_BY_DEFAULT = "synced_lyrics_by_default"
         private const val KEY_TEXT_SIZE = "text_size"
+        private const val KEY_FULLSCREEN_LYRICS = "fullscreen_lyrics"
 
         private const val MATERIAL_STYLE_ONE = "1"
         private const val MATERIAL_STYLE_TWO = "2"

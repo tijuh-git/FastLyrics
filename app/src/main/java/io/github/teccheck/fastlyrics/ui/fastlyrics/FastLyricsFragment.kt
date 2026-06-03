@@ -45,6 +45,10 @@ class FastLyricsFragment : Fragment() {
 
     private lateinit var settings: Settings
 
+    private var isFullscreenMode = false
+    private var lastTapTime = 0L
+    private val DOUBLE_TAP_DELAY = 300L
+
     private val menuProvider = object : MenuProvider {
         override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
             menuInflater.inflate(R.menu.menu_main, menu)
@@ -99,6 +103,18 @@ class FastLyricsFragment : Fragment() {
             showSynced(checked)
         }
 
+        // Double tap sur les paroles pour basculer fullscreen
+        binding.lyricsView.root.setOnClickListener {
+            val now = System.currentTimeMillis()
+            if (now - lastTapTime < DOUBLE_TAP_DELAY) {
+                toggleFullscreenMode()
+            }
+            lastTapTime = now
+        }
+
+        isFullscreenMode = settings.getFullscreenLyricsMode()
+        applyFullscreenMode(isFullscreenMode)
+
         return binding.root
     }
 
@@ -112,6 +128,18 @@ class FastLyricsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun toggleFullscreenMode() {
+        isFullscreenMode = !isFullscreenMode
+        settings.setFullscreenLyricsMode(isFullscreenMode)
+        applyFullscreenMode(isFullscreenMode)
+    }
+
+    private fun applyFullscreenMode(fullscreen: Boolean) {
+        binding.header.root.setVisible(!fullscreen)
+        binding.lyricsView.footer.setVisible(!fullscreen)
+        binding.lyricsView.lyricViewX.setVisible(true)
     }
 
     private fun setNewState(state: UiState) {

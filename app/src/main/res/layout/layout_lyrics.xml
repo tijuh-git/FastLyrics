@@ -31,51 +31,69 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <HorizontalScrollView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="none">
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="8dp">
 
-            <LinearLayout
-                android:id="@+id/actions"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/source"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="8dp">
+                android:layout_height="wrap_content"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="32dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="@string/source_genius"
+                android:textSize="11sp"
+                app:cornerRadius="16dp"
+                app:icon="@drawable/genius"
+                app:iconSize="14dp" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/source"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/source_genius"
-                    app:cornerRadius="32dp"
-                    app:icon="@drawable/genius" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/copy"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="32dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="@string/copy"
+                android:textSize="11sp"
+                app:cornerRadius="16dp"
+                app:icon="?attr/actionModeCopyDrawable"
+                app:iconSize="14dp" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/copy"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:text="@string/copy"
-                    app:cornerRadius="32dp"
-                    app:icon="?attr/actionModeCopyDrawable" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/share"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:text="@string/share"
-                    app:cornerRadius="32dp"
-                    app:icon="?attr/actionModeShareDrawable" />
-            </LinearLayout>
-        </HorizontalScrollView>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/share"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="32dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="@string/share"
+                android:textSize="11sp"
+                app:cornerRadius="16dp"
+                app:icon="?attr/actionModeShareDrawable"
+                app:iconSize="14dp" />
+        </LinearLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

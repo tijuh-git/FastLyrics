@@ -59,40 +59,11 @@ class ViewLyricsActivity : BaseActivity() {
         binding.header.textSongArtist.text = song.artist
         binding.lyricsView.textLyrics.text = song.getLyrics()
 
-        val picasso = Picasso.get().load(song.artUrl)
-
-        LyricsProvider.getProviderByName(song.provider)?.let {
-            val nameRes = Utils.getProviderNameRes(it)
-            val providerIconRes = Utils.getProviderIconRes(it)
-
-            picasso.placeholder(PlaceholderDrawable(this, providerIconRes))
-
-            binding.lyricsView.source.setText(nameRes)
-            binding.lyricsView.source.setIconResource(providerIconRes)
-
-            binding.lyricsView.textLyricsProvider.setText(nameRes)
-            binding.lyricsView.textLyricsProvider.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                providerIconRes,
-                0,
-                0,
-                0
-            )
-        }
-
-        picasso.into(binding.header.imageSongArt)
-
-        binding.lyricsView.source.setOnClickListener {
+        binding.header.textSongTitle.setOnClickListener {
             openLink(this@ViewLyricsActivity, song.sourceUrl)
         }
-        binding.lyricsView.copy.setOnClickListener {
-            copyToClipboard(
-                this@ViewLyricsActivity,
-                getString(R.string.lyrics_clipboard_label),
-                song.getLyrics()
-            )
-        }
-        binding.lyricsView.share.setOnClickListener {
-            share(this@ViewLyricsActivity, song.title, song.artist, song.getLyrics())
+        binding.header.textSongArtist.setOnClickListener {
+            openLink(this@ViewLyricsActivity, song.sourceUrl)
         }
     }
 

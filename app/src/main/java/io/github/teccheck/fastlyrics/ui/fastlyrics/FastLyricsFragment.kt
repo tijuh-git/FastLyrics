@@ -25,6 +25,10 @@ import io.github.teccheck.fastlyrics.utils.Utils.openLink
 import io.github.teccheck.fastlyrics.utils.Utils.setVisible
 import io.github.teccheck.fastlyrics.utils.Utils.share
 
+import android.widget.TextView
+import androidx.appcompat.widget.SwitchCompat
+import io.github.teccheck.fastlyrics.MainActivity
+
 class FastLyricsFragment : Fragment() {
 
     private lateinit var lyricsViewModel: FastLyricsViewModel
@@ -34,6 +38,40 @@ class FastLyricsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var settings: Settings
+
+    private var toolbarTitle: TextView? = null
+    private var toolbarArtist: TextView? = null
+    private var toolbarSyncSwitch: SwitchCompat? = null
+    private var toolbarSyncContainer: View? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
+    override fun onCreateOptionsMenu(menu: android.view.Menu, inflater: android.view.MenuInflater) {
+        inflater.inflate(R.menu.menu_main, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        val state = lyricsViewModel.state
+        return when (item.itemId) {
+            R.id.action_copy -> {
+                copyToClipboard(requireContext(), getString(R.string.lyrics_clipboard_label), state.getLyrics())
+                true
+            }
+            R.id.action_share -> {
+                share(requireContext(), state.getSongTitle(), state.getSongArtist(), state.getLyrics())
+                true
+            }
+            R.id.action_source -> {
+                openLink(requireContext(), state.getSourceUrl())
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         lyricsViewModel = ViewModelProvider(this)[FastLyricsViewModel::class.java]
@@ -48,12 +86,29 @@ class FastLyricsFragment : Fragment() {
         binding.refresher.setOnRefreshListener { loadLyricsForCurrentSong() }
         binding.refresher.setColorSchemeResources(R.color.theme_primary, R.color.theme_secondary)
 
-        binding.header.syncedLyricsSwitch.isChecked = settings.getSyncedLyricsByDefault()
-        binding.header.syncedLyricsSwitch.setOnCheckedChangeListener { _, checked ->
+        setupToolbarViews()
+
+        return binding.root
+    }
+
+    private fun setupToolbarViews() {
+        val activity = requireActivity()
+        toolbarTitle = activity.findViewById(R.id.toolbar_title)
+        toolbarArtist = activity.findViewById(R.id.toolbar_artist)
+        toolbarSyncSwitch = activity.findViewById(R.id.toolbar_sync_switch)
+        toolbarSyncContainer = activity.findViewById(R.id.toolbar_sync_container)
+
+        toolbarSyncSwitch?.isChecked = settings.getSyncedLyricsByDefault()
+        toolbarSyncSwitch?.setOnCheckedChangeListener { _, checked ->
             showSynced(checked)
         }
 
-        return binding.root
+        toolbarTitle?.setOnClickListener {
+            openLink(requireContext(), lyricsViewModel.state.getSourceUrl())
+        }
+        toolbarArtist?.setOnClickListener {
+            openLink(requireContext(), lyricsViewModel.state.getSourceUrl())
+        }
     }
 
     override fun onResume() {
@@ -66,6 +121,10 @@ class FastLyricsFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        toolbarTitle = null
+        toolbarArtist = null
+        toolbarSyncSwitch = null
+        toolbarSyncContainer = null
     }
 
     private fun setNewState(state: UiState) {
@@ -73,15 +132,10 @@ class FastLyricsFragment : Fragment() {
 
         binding.refresher.isRefreshing = state.isRefreshing
 
-        // Header
-        binding.header.root.setVisible(state.showHeader)
-        binding.header.textSongTitle.text = state.getSongTitle()
-        binding.header.textSongArtist.text = state.getSongArtist()
-        binding.header.syncedLyricsAvailable.setVisible(state.hasSyncedLyrics())
-
-        Picasso.get().load(state.getArtUrl())
-            .placeholder(BitmapDrawable(resources, state.getArtBitmap()))
-            .into(binding.header.imageSongArt)
+        // Toolbar
+        toolbarTitle?.text = state.getSongTitle()
+        toolbarArtist?.text = state.getSongArtist()
+        toolbarSyncContainer?.setVisible(state.hasSyncedLyrics())
 
         // Error
         binding.errorView.root.setVisible(state.showError)
@@ -93,33 +147,7 @@ class FastLyricsFragment : Fragment() {
         binding.lyricsView.textLyrics.text = state.getLyrics()
         state.getSyncedLyrics()?.let { binding.lyricsView.lyricViewX.loadLyric(it) }
 
-        state.getSongProvider()?.let {
-            val providerIconRes = Utils.getProviderIconRes(it)
-            val providerNameRes = Utils.getProviderNameRes(it)
-
-            binding.lyricsView.source.setText(providerNameRes)
-            binding.lyricsView.source.setIconResource(providerIconRes)
-
-            binding.lyricsView.textLyricsProvider.setText(providerNameRes)
-            binding.lyricsView.textLyricsProvider.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                providerIconRes,
-                0,
-                0,
-                0
-            )
-        }
-
-        binding.lyricsView.source.setOnClickListener {
-            openLink(requireContext(), state.getSourceUrl())
-        }
-        binding.lyricsView.copy.setOnClickListener {
-            copyToClipboard(requireContext(), getString(R.string.lyrics_clipboard_label), state.getLyrics())
-        }
-        binding.lyricsView.share.setOnClickListener {
-            share(requireContext(), state.getSongTitle(), state.getSongArtist(), state.getLyrics())
-        }
-
-        showSynced(binding.header.syncedLyricsSwitch.isChecked)
+        showSynced(toolbarSyncSwitch?.isChecked ?: false)
 
         if (state.startRefresh) loadLyricsForCurrentSong()
 

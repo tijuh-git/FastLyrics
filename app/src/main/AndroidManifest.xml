@@ -14,19 +14,19 @@
         android:theme="@style/Theme.FastLyrics.Material1">
         <activity
             android:name=".ui.about.AboutActivity"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".ui.permission.PermissionActivity"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".ui.saved.SavedActivity"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".ui.viewlyrics.ViewLyricsActivity"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".ui.settings.SettingsActivity"
-            android:exported="true" />
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

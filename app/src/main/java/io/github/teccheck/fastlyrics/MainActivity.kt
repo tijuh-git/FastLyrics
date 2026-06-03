@@ -39,6 +39,7 @@ class MainActivity :
         binding.navView.setCheckedItem(R.id.nav_fast_lyrics)
 
         setSupportActionBar(binding.appBarMain.toolbarLayout.toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         if (!DummyNotificationListenerService.canAccessNotifications(this)) {
@@ -47,19 +48,10 @@ class MainActivity :
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        menu?.findItem(R.id.app_bar_search)?.let { searchMenuItem = it }
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-        R.id.app_bar_search -> {
-            if (navController.currentDestination?.id != R.id.nav_search) {
-                navController.navigate(R.id.nav_search)
-            }
-            true
-        }
-
         else -> super.onOptionsItemSelected(item)
     }
 

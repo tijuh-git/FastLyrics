@@ -25,7 +25,7 @@ class Settings(context: Context) {
 
     fun getIsAutoRefreshEnabled(): Boolean = sharedPreferences.getBoolean(KEY_AUTO_REFRESH, false)
 
-    fun getSyncedLyricsByDefault(): Boolean = sharedPreferences.getBoolean(KEY_SYNCED_LYRICS_BY_DEFAULT, false)
+    fun getSyncedLyricsByDefault(): Boolean = sharedPreferences.getBoolean(KEY_SYNCED_LYRICS_BY_DEFAULT, true)
 
     fun getTextSize(): Int = sharedPreferences.getInt(KEY_TEXT_SIZE, 18)
 

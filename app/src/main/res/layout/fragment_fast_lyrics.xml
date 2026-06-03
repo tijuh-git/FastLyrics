@@ -1,51 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/refresher"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    app:swipeRefreshLayoutProgressSpinnerBackgroundColor="?attr/colorSurface"
     tools:context=".ui.fastlyrics.FastLyricsFragment">
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/refresher"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:swipeRefreshLayoutProgressSpinnerBackgroundColor="?attr/colorSurface">
+        android:fillViewport="true">
 
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/scroll_view"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <LinearLayout
+            <include
+                android:id="@+id/error_view"
+                layout="@layout/layout_error"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_height="wrap_content" />
 
-                <include
-                    android:id="@+id/header"
-                    layout="@layout/layout_header"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+            <include
+                android:id="@+id/lyrics_view"
+                layout="@layout/layout_lyrics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
-                <include
-                    android:id="@+id/error_view"
-                    layout="@layout/layout_error"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+        </LinearLayout>
 
-                <include
-                    android:id="@+id/lyrics_view"
-                    layout="@layout/layout_lyrics"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+    </androidx.core.widget.NestedScrollView>
 
-            </LinearLayout>
-
-        </androidx.core.widget.NestedScrollView>
-
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-</LinearLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -6,8 +6,10 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.GestureDetector
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -48,8 +50,7 @@ class FastLyricsFragment : Fragment() {
     private lateinit var settings: Settings
 
     private var isFullscreenMode = false
-    private var lastTapTime = 0L
-    private val DOUBLE_TAP_DELAY = 300L
+    private lateinit var doubleTapDetector: GestureDetector
 
     // Auto-fullscreen settings
     private var autoFullscreenTimer: Timer? = null
@@ -99,6 +100,15 @@ class FastLyricsFragment : Fragment() {
 
         settings = Settings(requireContext())
 
+        doubleTapDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDown(e: MotionEvent): Boolean = true
+
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                toggleFullscreenMode()
+                return true
+            }
+        })
+
         lyricsViewModel.songMeta.observe(viewLifecycleOwner, this::songMetaObserver)
         lyricsViewModel.songWithLyrics.observe(viewLifecycleOwner, this::songWithLyricsObserver)
         lyricsViewModel.songPosition.observe(viewLifecycleOwner, this::setTime)
@@ -111,14 +121,13 @@ class FastLyricsFragment : Fragment() {
             showSynced(checked)
         }
 
-        // Double tap sur les paroles pour basculer fullscreen
-        binding.lyricsView.root.setOnClickListener {
-            val now = System.currentTimeMillis()
-            if (now - lastTapTime < DOUBLE_TAP_DELAY) {
-                toggleFullscreenMode()
-            }
-            lastTapTime = now
+        val onLyricsTouch = View.OnTouchListener { _, event ->
+            doubleTapDetector.onTouchEvent(event)
+            false
         }
+        binding.scrollView.setOnTouchListener(onLyricsTouch)
+        binding.lyricsView.textLyrics.setOnTouchListener(onLyricsTouch)
+        binding.lyricsView.lyricViewX.setOnTouchListener(onLyricsTouch)
 
         isFullscreenMode = settings.getFullscreenLyricsMode()
         applyFullscreenMode(isFullscreenMode)
@@ -192,7 +201,9 @@ class FastLyricsFragment : Fragment() {
         binding.header.root.setVisible(state.showHeader)
         binding.header.textSongTitle.text = state.getSongTitle()
         binding.header.textSongArtist.text = state.getSongArtist()
-        binding.header.syncedLyricsAvailable.setVisible(state.hasSyncedLyrics())
+        val hasSyncedLyrics = state.hasSyncedLyrics()
+        binding.header.syncedLyricsAvailable.setVisible(hasSyncedLyrics)
+        binding.header.syncedLyricsSwitch.isChecked = settings.getSyncedLyricsByDefault() && hasSyncedLyrics
 
         Picasso.get().load(state.getArtUrl())
             .placeholder(BitmapDrawable(resources, state.getArtBitmap()))
@@ -249,7 +260,7 @@ class FastLyricsFragment : Fragment() {
         lyricsViewModel.autoRefresh = settings.getIsAutoRefreshEnabled()
 
         val textSize = settings.getTextSize().toFloat()
-        val textSizeFocusAdd = 2f
+        val textSizeFocusAdd = 3f
 
         binding.lyricsView.lyricViewX.apply {
             setNormalTextSize(

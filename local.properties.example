@@ -1,0 +1,12 @@
+# Copy this file to local.properties and fill in your API keys.
+# local.properties is listed in .gitignore and must NEVER be committed.
+
+# Android SDK location (set automatically by Android Studio)
+sdk.dir=/path/to/your/Android/Sdk
+
+# Genius API key — get yours at https://genius.com/api-clients
+genius.api.key=YOUR_GENIUS_API_KEY_HERE
+
+# PetitLyrics API key
+petitlyrics.api.key=YOUR_PETIT_LYRICS_API_KEY_HERE
+

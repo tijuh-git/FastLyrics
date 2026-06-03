@@ -1,5 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">FastLyrics</string>
+    <string name="app_name">FastLyrics Fork</string>
 
     <!-- Nav drawer -->
     <string name="menu_lyrics">Lyrics</string>
@@ -58,7 +58,7 @@
     <string name="source_petitlyrics" translatable="false">PetitLyrics</string>
     <string name="source_netease" translatable="false">Netease</string>
 
-    <string name="source_code_url" translatable="false">https://github.com/TecCheck/FastLyrics</string>
+    <string name="source_code_url" translatable="false">https://github.com/tijuh-git/FastLyrics</string>
     <string name="source_url_genius" translatable="false">https://genius.com/</string>
     <string name="source_url_deezer" translatable="false">https://deezer.com/</string>
     <string name="source_url_lrclib" translatable="false">https://lrclib.net/</string>

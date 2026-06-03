@@ -21,7 +21,7 @@ object LyricStorage {
 
     fun init(context: Context) {
         database = Room.databaseBuilder(context, LyricsDatabase::class.java, "lyrics")
-            .addMigrations(LyricsDatabase.MIGRATION_3_4)
+            .addMigrations(LyricsDatabase.MIGRATION_3_4, LyricsDatabase.MIGRATION_4_5)
             .build()
     }
 
@@ -50,7 +50,8 @@ object LyricStorage {
     }
 
     fun store(song: SongWithLyrics) {
-        if (findSong(song.title, song.artist, song.type) == null) {
+        // Use title+artist only (not deprecated 'type') to avoid duplicates
+        if (findSong(song.title, song.artist) == null) {
             database.songsDao().insert(song)
         }
     }

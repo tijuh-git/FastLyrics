@@ -31,7 +31,7 @@ data class SongMeta(
         var result = title.hashCode()
         result = 31 * result + (artist?.hashCode() ?: 0)
         result = 31 * result + (album?.hashCode() ?: 0)
-        result = 31 * result + (art?.hashCode() ?: 0)
+        // 'art' is intentionally excluded to match equals() behaviour
         result = 31 * result + (duration?.hashCode() ?: 0)
         return result
     }

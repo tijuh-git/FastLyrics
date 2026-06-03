@@ -1,14 +1,18 @@
 package io.github.teccheck.fastlyrics.ui.fastlyrics
 
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
-import com.squareup.picasso.Picasso
 import dev.forkhandles.result4k.Failure
 import dev.forkhandles.result4k.Result
 import dev.forkhandles.result4k.Success
@@ -19,7 +23,6 @@ import io.github.teccheck.fastlyrics.databinding.FragmentFastLyricsBinding
 import io.github.teccheck.fastlyrics.exceptions.LyricsApiException
 import io.github.teccheck.fastlyrics.model.SongMeta
 import io.github.teccheck.fastlyrics.model.SongWithLyrics
-import io.github.teccheck.fastlyrics.utils.Utils
 import io.github.teccheck.fastlyrics.utils.Utils.copyToClipboard
 import io.github.teccheck.fastlyrics.utils.Utils.openLink
 import io.github.teccheck.fastlyrics.utils.Utils.setVisible
@@ -27,7 +30,7 @@ import io.github.teccheck.fastlyrics.utils.Utils.share
 
 import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
-import io.github.teccheck.fastlyrics.MainActivity
+import androidx.core.content.ContextCompat
 
 class FastLyricsFragment : Fragment() {
 
@@ -44,17 +47,17 @@ class FastLyricsFragment : Fragment() {
     private var toolbarSyncSwitch: SwitchCompat? = null
     private var toolbarSyncContainer: View? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
+    private val menuProvider = object : MenuProvider {
+        override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+            menuInflater.inflate(R.menu.menu_main, menu)
+        }
+
+        override fun onMenuItemSelected(item: MenuItem): Boolean {
+            return onMenuAction(item)
+        }
     }
 
-    override fun onCreateOptionsMenu(menu: android.view.Menu, inflater: android.view.MenuInflater) {
-        inflater.inflate(R.menu.menu_main, menu)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+    private fun onMenuAction(item: MenuItem): Boolean {
         val state = lyricsViewModel.state
         return when (item.itemId) {
             R.id.action_copy -> {
@@ -69,13 +72,16 @@ class FastLyricsFragment : Fragment() {
                 openLink(requireContext(), state.getSourceUrl())
                 true
             }
-            else -> super.onOptionsItemSelected(item)
+            else -> false
         }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         lyricsViewModel = ViewModelProvider(this)[FastLyricsViewModel::class.java]
         _binding = FragmentFastLyricsBinding.inflate(inflater, container, false)
+
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         settings = Settings(requireContext())
 
@@ -165,7 +171,7 @@ class FastLyricsFragment : Fragment() {
                     resources.displayMetrics
                 )
             )
-            setCurrentColor(resources.getColor(R.color.theme_primary))
+            setCurrentColor(ContextCompat.getColor(requireContext(), R.color.theme_primary))
             setCurrentTextSize(
                 TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_SP,
@@ -215,7 +221,4 @@ class FastLyricsFragment : Fragment() {
         binding.lyricsView.lyricViewX.updateTime(time)
     }
 
-    companion object {
-        private const val TAG = "FastLyricsFragment"
-    }
 }

@@ -187,6 +187,7 @@ class FastLyricsFragment : Fragment() {
     }
 
     private fun applyFullscreenMode(fullscreen: Boolean) {
+        isFullscreenMode = fullscreen
         binding.header.root.setVisible(!fullscreen)
         binding.lyricsView.footer.setVisible(!fullscreen)
         binding.lyricsView.lyricViewX.setVisible(true)
@@ -198,7 +199,7 @@ class FastLyricsFragment : Fragment() {
         binding.refresher.isRefreshing = state.isRefreshing
 
         // Header
-        binding.header.root.setVisible(state.showHeader)
+        binding.header.root.setVisible(state.showHeader && !isFullscreenMode)
         binding.header.textSongTitle.text = state.getSongTitle()
         binding.header.textSongArtist.text = state.getSongArtist()
         val hasSyncedLyrics = state.hasSyncedLyrics()
@@ -244,6 +245,9 @@ class FastLyricsFragment : Fragment() {
         binding.lyricsView.share.setOnClickListener {
             share(requireContext(), state.getSongTitle(), state.getSongArtist(), state.getLyrics())
         }
+
+        // Re-apply chrome visibility after state updates to keep fullscreen stable across refreshes.
+        binding.lyricsView.footer.setVisible(!isFullscreenMode)
 
         showSynced(binding.header.syncedLyricsSwitch.isChecked)
 

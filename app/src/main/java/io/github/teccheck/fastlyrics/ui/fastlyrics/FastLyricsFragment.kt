@@ -2,6 +2,7 @@ package io.github.teccheck.fastlyrics.ui.fastlyrics
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings as AndroidSettings
 import android.util.Log
@@ -306,7 +307,7 @@ class FastLyricsFragment : Fragment() {
             return
         }
 
-        if (!AndroidSettings.canDrawOverlays(requireContext())) {
+        if (!hasOverlayPermission()) {
             Toast.makeText(requireContext(), getString(R.string.overlay_permission_required), Toast.LENGTH_LONG).show()
             startActivity(
                 Intent(
@@ -340,10 +341,8 @@ class FastLyricsFragment : Fragment() {
                             }
                         )
                     }
-                } else {
-                    Toast.makeText(requireContext(), getString(R.string.overlay_not_visible), Toast.LENGTH_LONG).show()
                 }
-            }, 350)
+            }, 500)
         }.onFailure {
             Log.e(TAG, "Failed to start overlay service", it)
             Toast.makeText(requireContext(), getString(R.string.overlay_start_failed), Toast.LENGTH_LONG).show()
@@ -384,6 +383,14 @@ class FastLyricsFragment : Fragment() {
 
     private fun refreshOverlayState() {
         isOverlayRunning = settings.isOverlayServiceRunning()
+    }
+
+    private fun hasOverlayPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            AndroidSettings.canDrawOverlays(requireContext())
+        } else {
+            true
+        }
     }
 
     private fun updateOverlayButtonState() {

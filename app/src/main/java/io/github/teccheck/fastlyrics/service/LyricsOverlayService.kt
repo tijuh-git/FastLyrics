@@ -3,6 +3,7 @@ package io.github.teccheck.fastlyrics.service
 import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.IBinder
 import android.provider.Settings as AndroidSettings
 import android.util.Log
@@ -77,7 +78,7 @@ class LyricsOverlayService : Service() {
     private fun ensureOverlayVisible() {
         if (overlayView != null) return
 
-        if (!AndroidSettings.canDrawOverlays(this)) {
+        if (!hasOverlayPermission()) {
             appSettings.setOverlayServiceRunning(false)
             stopSelf()
             return
@@ -93,7 +94,7 @@ class LyricsOverlayService : Service() {
         val params = WindowManager.LayoutParams(
             widthPx,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            overlayWindowType(),
             defaultFlags(),
             PixelFormat.TRANSLUCENT
         ).apply {
@@ -209,6 +210,23 @@ class LyricsOverlayService : Service() {
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
     }
 
+    private fun overlayWindowType(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            @Suppress("DEPRECATION")
+            WindowManager.LayoutParams.TYPE_PHONE
+        }
+    }
+
+    private fun hasOverlayPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            AndroidSettings.canDrawOverlays(this)
+        } else {
+            true
+        }
+    }
+
     companion object {
         private const val TAG = "LyricsOverlayService"
 
@@ -220,6 +238,7 @@ class LyricsOverlayService : Service() {
         const val EXTRA_LYRICS = "extra_lyrics"
     }
 }
+
 
 
 

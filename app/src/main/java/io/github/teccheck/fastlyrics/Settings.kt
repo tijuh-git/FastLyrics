@@ -38,7 +38,7 @@ class Settings(context: Context) {
     fun isOverlayServiceRunning(): Boolean = sharedPreferences.getBoolean(KEY_OVERLAY_RUNNING, false)
 
     fun setOverlayServiceRunning(running: Boolean) {
-        sharedPreferences.edit().putBoolean(KEY_OVERLAY_RUNNING, running).apply()
+        sharedPreferences.edit().putBoolean(KEY_OVERLAY_RUNNING, running).commit()
     }
 
     companion object {

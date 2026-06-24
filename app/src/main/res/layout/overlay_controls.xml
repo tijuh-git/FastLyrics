@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Controls bar: ≡ pass-through  ↑↑ expand-to-app  ⚙ settings  ✕ close-service -->
+<!-- Controls bar: 2 buttons visible by default, scroll for more -->
 <HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="76dp"
     android:layout_height="wrap_content"
+    android:overScrollMode="never"
     android:scrollbars="none">
 
     <LinearLayout
@@ -12,52 +13,53 @@
         android:orientation="horizontal"
         android:padding="2dp">
 
-        <!-- ≡ Pass-through toggle -->
+        <!-- ≡ Pass-through toggle (1st visible) -->
         <ImageButton
             android:id="@+id/overlay_ctrl_touch_toggle"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/overlay_touch_through_off"
-            android:padding="7dp"
+            android:padding="6dp"
             android:src="@drawable/baseline_drag_handle_24"
             android:tint="@android:color/white" />
 
-        <!-- ↑↑ Expand to full app (double chevrons up = maximiser) -->
+        <!-- <> expand = restore full app (2nd visible) -->
         <ImageButton
             android:id="@+id/overlay_ctrl_open_app"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Restore full app"
-            android:padding="7dp"
-            android:src="@drawable/ic_expand_up"
+            android:padding="6dp"
+            android:src="@drawable/ic_expand_outward"
             android:tint="@android:color/white" />
 
-        <!-- ⚙ Settings -->
+        <!-- ⚙ Settings (swipe to reveal) -->
         <ImageButton
             android:id="@+id/overlay_ctrl_settings"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Settings"
-            android:padding="7dp"
+            android:padding="6dp"
             android:src="@drawable/outline_settings_24"
             android:tint="@android:color/white" />
 
-        <!-- ✕ Close overlay service (stays on current foreground app) -->
+        <!-- ✕ Close service (swipe to reveal) -->
         <ImageButton
             android:id="@+id/overlay_ctrl_close"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/overlay_stop"
-            android:padding="7dp"
+            android:padding="6dp"
             android:src="@drawable/baseline_close_24"
             android:tint="@android:color/white" />
 
     </LinearLayout>
 </HorizontalScrollView>
+
 
 
 

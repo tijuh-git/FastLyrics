@@ -6,69 +6,47 @@
     android:orientation="vertical"
     android:padding="14dp">
 
-    <!-- Background opacity -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Opacity"
-            android:textColor="#BBFFFFFF"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/overlay_alpha_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="75%"
-            android:textColor="#BBFFFFFF"
-            android:textSize="12sp" />
+    <!-- Opacity -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:orientation="horizontal">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Opacity"
+            android:textColor="#BBFFFFFF" android:textSize="12sp" />
+        <TextView android:id="@+id/overlay_alpha_value" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="75%"
+            android:textColor="#BBFFFFFF" android:textSize="12sp" />
     </LinearLayout>
+    <SeekBar android:id="@+id/overlay_alpha_slider"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp" android:max="90" android:progress="65" />
 
-    <SeekBar
-        android:id="@+id/overlay_alpha_slider"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:max="90"
-        android:progress="65" />
-
-    <!-- Window width -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Width"
-            android:textColor="#BBFFFFFF"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/overlay_size_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="75%"
-            android:textColor="#BBFFFFFF"
-            android:textSize="12sp" />
+    <!-- Width -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:orientation="horizontal">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Width"
+            android:textColor="#BBFFFFFF" android:textSize="12sp" />
+        <TextView android:id="@+id/overlay_size_value" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="75%"
+            android:textColor="#BBFFFFFF" android:textSize="12sp" />
     </LinearLayout>
+    <SeekBar android:id="@+id/overlay_size_slider"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp" android:max="70" android:progress="45" />
 
-    <SeekBar
-        android:id="@+id/overlay_size_slider"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:max="85"
-        android:progress="25" />
+    <!-- Height -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:orientation="horizontal">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Height"
+            android:textColor="#BBFFFFFF" android:textSize="12sp" />
+        <TextView android:id="@+id/overlay_height_value" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="200dp"
+            android:textColor="#BBFFFFFF" android:textSize="12sp" />
+    </LinearLayout>
+    <SeekBar android:id="@+id/overlay_height_slider"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:max="9" android:progress="4" />
 
 </LinearLayout>
-
 

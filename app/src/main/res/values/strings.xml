@@ -29,10 +29,10 @@
     <string name="menu_copy" translatable="false">Copy</string>
     <string name="menu_share" translatable="false">Share</string>
     <string name="menu_source" translatable="false">Source</string>
-    <string name="toggle_fullscreen_enter">Reduce</string>
-    <string name="toggle_fullscreen_exit">Restore</string>
+    <string name="toggle_fullscreen_enter">Compact</string>
+    <string name="toggle_fullscreen_exit">Full</string>
     <string name="toggle_overlay_start">Float</string>
-    <string name="toggle_overlay_stop">Stop Float</string>
+    <string name="toggle_overlay_stop">Exit Float</string>
     <string name="overlay_title">Lyrics Overlay</string>
     <string name="overlay_stop">Stop</string>
     <string name="overlay_touch_through_on">Touch-through is ON</string>

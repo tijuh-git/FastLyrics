@@ -63,12 +63,20 @@ class Settings(context: Context) {
         sharedPreferences.edit().putInt(KEY_OVERLAY_WIDTH_PCT, pct.coerceIn(30, 100)).apply()
     }
 
-    /** "S", "M", "L" */
-    fun getOverlaySize(): String =
-        sharedPreferences.getString(KEY_OVERLAY_SIZE, DEFAULT_OVERLAY_SIZE) ?: DEFAULT_OVERLAY_SIZE
+    /** Height in dp: 100..600 */
+    fun getOverlayHeightDp(): Int =
+        sharedPreferences.getInt(KEY_OVERLAY_HEIGHT_DP, 200)
 
-    fun setOverlaySize(size: String) {
-        sharedPreferences.edit().putString(KEY_OVERLAY_SIZE, size).apply()
+    fun setOverlayHeightDp(dp: Int) {
+        sharedPreferences.edit().putInt(KEY_OVERLAY_HEIGHT_DP, dp.coerceIn(100, 600)).apply()
+    }
+
+    /** Display mode: "full" or "compact" */
+    fun getDisplayMode(): String =
+        sharedPreferences.getString(KEY_DISPLAY_MODE, MODE_FULL) ?: MODE_FULL
+
+    fun setDisplayMode(mode: String) {
+        sharedPreferences.edit().putString(KEY_DISPLAY_MODE, mode).apply()
     }
 
     companion object {
@@ -83,6 +91,8 @@ class Settings(context: Context) {
         private const val KEY_OVERLAY_ALPHA = "overlay_alpha"
         private const val KEY_OVERLAY_SIZE = "overlay_size"
         private const val KEY_OVERLAY_WIDTH_PCT = "overlay_width_pct"
+        private const val KEY_OVERLAY_HEIGHT_DP = "overlay_height_dp"
+        private const val KEY_DISPLAY_MODE = "display_mode"
 
         private const val MATERIAL_STYLE_ONE = "1"
         private const val MATERIAL_STYLE_TWO = "2"
@@ -92,5 +102,7 @@ class Settings(context: Context) {
         private const val DEFAULT_MATERIAL_STYLE = MATERIAL_STYLE_TWO
         const val DEFAULT_OVERLAY_ALPHA = 75
         const val DEFAULT_OVERLAY_SIZE = "M"
+        const val MODE_FULL = "full"
+        const val MODE_COMPACT = "compact"
     }
 }

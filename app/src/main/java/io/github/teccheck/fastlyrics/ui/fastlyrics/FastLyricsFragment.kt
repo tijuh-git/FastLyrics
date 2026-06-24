@@ -129,11 +129,12 @@ class FastLyricsFragment : Fragment() {
         binding.lyricsView.toggleFullscreen.setOnClickListener { toggleFullscreenMode() }
         binding.lyricsView.toggleOverlay.setOnClickListener { toggleOverlayMode() }
 
-        isFullscreenMode = settings.getFullscreenLyricsMode()
+        // Restore last display mode (compact/full) persisted across sessions
+        isFullscreenMode = settings.getDisplayMode() == Settings.MODE_COMPACT
+        settings.setFullscreenLyricsMode(isFullscreenMode)
         refreshOverlayState()
         applyFullscreenMode(isFullscreenMode)
         updateOverlayButtonState()
-
         return binding.root
     }
 
@@ -154,6 +155,8 @@ class FastLyricsFragment : Fragment() {
     private fun toggleFullscreenMode() {
         isFullscreenMode = !isFullscreenMode
         settings.setFullscreenLyricsMode(isFullscreenMode)
+        // Persist display mode for next launch
+        settings.setDisplayMode(if (isFullscreenMode) Settings.MODE_COMPACT else Settings.MODE_FULL)
         applyFullscreenMode(isFullscreenMode)
     }
 
@@ -168,7 +171,8 @@ class FastLyricsFragment : Fragment() {
         binding.lyricsView.share.setVisible(!fullscreen)
 
         binding.lyricsView.toggleFullscreen.apply {
-            setIconResource(if (fullscreen) R.drawable.baseline_close_24 else R.drawable.baseline_open_in_new_24)
+            // compact mode = compress icon + label "Compact"; full mode = expand icon + label "Full"
+            setIconResource(if (fullscreen) R.drawable.ic_expand_outward else R.drawable.ic_compress_inward)
             text = getString(if (fullscreen) R.string.toggle_fullscreen_exit else R.string.toggle_fullscreen_enter)
         }
     }

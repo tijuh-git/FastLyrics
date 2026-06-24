@@ -22,7 +22,6 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.TextView
@@ -40,21 +39,22 @@ class LyricsOverlayService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var appSettings: Settings
 
+    // Lyrics window (can be pass-through)
     private var lyricsWindowView: View? = null
     private var lyricsTextView: TextView? = null
     private var lyricViewX: LyricViewX? = null
     private var lyricsParams: WindowManager.LayoutParams? = null
 
+    // Controls window (always interactive)
     private var controlsWindowView: View? = null
     private var controlsParams: WindowManager.LayoutParams? = null
     private var touchToggleButton: ImageButton? = null
 
+    // Settings panel window
     private var settingsWindowView: View? = null
     private var settingsParams: WindowManager.LayoutParams? = null
 
     private var isTouchThrough = false
-
-    // Cached data for Copy/Share
     private var currentTitle = ""
     private var currentArtist = ""
     private var currentLyricsText = ""
@@ -111,13 +111,18 @@ class LyricsOverlayService : Service() {
             appSettings.setOverlayServiceRunning(false); stopSelf(); return
         }
 
-        val themedContext = ContextThemeWrapper(this, R.style.Theme_FastLyrics_Material2)
-        val density = resources.displayMetrics.density
-        val screenW = resources.displayMetrics.widthPixels
-        val topY = (density * 64).roundToInt()
+        val themedCtx = ContextThemeWrapper(this, R.style.Theme_FastLyrics_Material2)
+        val density   = resources.displayMetrics.density
+        val screenW   = resources.displayMetrics.widthPixels
+        val topY      = (density * 64).roundToInt()
 
         // --- Lyrics window ---
-        val lView = LayoutInflater.from(themedContext).inflate(R.layout.overlay_lyrics, null)
+        val lView = LayoutInflater.from(themedCtx).inflate(R.layout.overlay_lyrics, null)
+        val heightDp = appSettings.getOverlayHeightDp()
+        val heightPx = (heightDp * density).toInt()
+        lView.findViewById<LyricViewX>(R.id.overlay_lyric_view_x)?.let {
+            it.layoutParams?.height = heightPx
+        }
         val lParams = WindowManager.LayoutParams(
             sizeWidthPx(screenW), WindowManager.LayoutParams.WRAP_CONTENT,
             overlayWindowType(), defaultLyricsFlags(), PixelFormat.TRANSLUCENT
@@ -126,68 +131,61 @@ class LyricsOverlayService : Service() {
         applyBackgroundAlpha(lView)
         setupLyricsDrag(lView, lParams)
 
-        // Copy button — same as main app
         lView.findViewById<ImageButton>(R.id.overlay_btn_copy)?.setOnClickListener {
-            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("Lyrics", currentLyricsText))
+            (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager)
+                .setPrimaryClip(ClipData.newPlainText("Lyrics", currentLyricsText))
             Toast.makeText(this, getString(R.string.lyrics_clipboard_label), Toast.LENGTH_SHORT).show()
         }
-        // Share button — same as main app
         lView.findViewById<ImageButton>(R.id.overlay_btn_share)?.setOnClickListener {
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            val si = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_SUBJECT, "$currentTitle — $currentArtist")
                 putExtra(Intent.EXTRA_TEXT, "$currentTitle\n$currentArtist\n\n$currentLyricsText")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            startActivity(Intent.createChooser(shareIntent, null).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
+            startActivity(Intent.createChooser(si, null).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
         }
 
         runCatching { windowManager.addView(lView, lParams) }.onFailure {
-            appSettings.setOverlayLastError("addView lyrics: ${it.javaClass.simpleName}: ${it.message ?: "unknown"}")
+            appSettings.setOverlayLastError("addView: ${it.javaClass.simpleName}: ${it.message ?: "unknown"}")
             appSettings.setOverlayServiceRunning(false); stopSelf(); return
         }
 
         val lx = lView.findViewById<LyricViewX>(R.id.overlay_lyric_view_x).apply {
             setNormalTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 16f, resources.displayMetrics))
             setCurrentTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 19f, resources.displayMetrics))
-            setCurrentColor(ContextCompat.getColor(themedContext, R.color.theme_primary))
+            setCurrentColor(ContextCompat.getColor(themedCtx, R.color.theme_primary))
             setNormalColor(0xCCFFFFFF.toInt())
         }
 
         // --- Controls window (ALWAYS interactive) ---
-        val ctrlView = LayoutInflater.from(themedContext).inflate(R.layout.overlay_controls, null)
-        val btnToggle   = ctrlView.findViewById<ImageButton>(R.id.overlay_ctrl_touch_toggle)
-        val btnClose    = ctrlView.findViewById<ImageButton>(R.id.overlay_ctrl_close)
-        val btnOpenApp  = ctrlView.findViewById<ImageButton>(R.id.overlay_ctrl_open_app)
+        val ctrlView   = LayoutInflater.from(themedCtx).inflate(R.layout.overlay_controls, null)
+        val btnToggle  = ctrlView.findViewById<ImageButton>(R.id.overlay_ctrl_touch_toggle)
+        val btnClose   = ctrlView.findViewById<ImageButton>(R.id.overlay_ctrl_close)
+        val btnOpenApp = ctrlView.findViewById<ImageButton>(R.id.overlay_ctrl_open_app)
         val btnSettings = ctrlView.findViewById<ImageButton>(R.id.overlay_ctrl_settings)
         val ctrlParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
             overlayWindowType(), WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT
         ).apply { gravity = Gravity.TOP or Gravity.END; y = topY }
 
-        // ✕ = close overlay service, stay wherever you are
         btnClose.setOnClickListener { stopSelf() }
-        // ≡ = pass-through toggle
         btnToggle.setOnClickListener { setTouchThrough(!isTouchThrough) }
-        // ↑↑ = exit float mode AND restore FastLyrics full view (no duplicate)
         btnOpenApp.setOnClickListener {
             stopSelf()
-            val intent = Intent(this, MainActivity::class.java).apply {
+            startActivity(Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
+            })
         }
-        // ⚙ = overlay-specific settings panel
-        btnSettings.setOnClickListener { toggleSettingsPanel(themedContext, ctrlParams.y) }
+        btnSettings.setOnClickListener { toggleSettingsPanel(themedCtx, ctrlParams.y) }
 
         runCatching { windowManager.addView(ctrlView, ctrlParams) }
             .onFailure { Log.w(TAG, "Controls window failed", it) }
 
-        lyricsWindowView = lView
-        lyricsTextView   = lView.findViewById(R.id.overlay_text_lyrics)
-        lyricViewX       = lx
-        lyricsParams     = lParams
+        lyricsWindowView   = lView
+        lyricsTextView     = lView.findViewById(R.id.overlay_text_lyrics)
+        lyricViewX         = lx
+        lyricsParams       = lParams
         controlsWindowView = ctrlView
         controlsParams     = ctrlParams
         touchToggleButton  = btnToggle
@@ -201,8 +199,7 @@ class LyricsOverlayService : Service() {
 
     private fun updateHeader(title: String, artist: String) {
         val header = lyricsWindowView?.findViewById<View>(R.id.overlay_header) ?: return
-        val hasInfo = title.isNotBlank() || artist.isNotBlank()
-        header.visibility = if (hasInfo) View.VISIBLE else View.GONE
+        header.visibility = if (title.isNotBlank() || artist.isNotBlank()) View.VISIBLE else View.GONE
         lyricsWindowView?.findViewById<TextView>(R.id.overlay_title)?.text = title
         lyricsWindowView?.findViewById<TextView>(R.id.overlay_artist)?.text = artist
     }
@@ -212,12 +209,11 @@ class LyricsOverlayService : Service() {
             runCatching { windowManager.removeView(settingsWindowView) }
             settingsWindowView = null; settingsParams = null; return
         }
-
         val sv = LayoutInflater.from(ctx).inflate(R.layout.overlay_settings, null)
-        val alpha = appSettings.getOverlayBackgroundAlpha()
+        val alpha    = appSettings.getOverlayBackgroundAlpha()
         val widthPct = appSettings.getOverlayWidthPercent()
+        val heightDp = appSettings.getOverlayHeightDp()
 
-        // Fermeture au clic EXTÉRIEUR via FLAG_WATCH_OUTSIDE_TOUCH
         val sParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
             overlayWindowType(),
@@ -225,48 +221,41 @@ class LyricsOverlayService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply { gravity = Gravity.TOP or Gravity.END; y = nearY + 80 }
 
-        val alphaSlider = sv.findViewById<SeekBar>(R.id.overlay_alpha_slider)
-        val alphaLabel  = sv.findViewById<TextView>(R.id.overlay_alpha_value)
-        val sizeSlider  = sv.findViewById<SeekBar>(R.id.overlay_size_slider)
-        val sizeLabel   = sv.findViewById<TextView>(R.id.overlay_size_value)
+        val alphaSlider  = sv.findViewById<SeekBar>(R.id.overlay_alpha_slider)
+        val alphaLabel   = sv.findViewById<TextView>(R.id.overlay_alpha_value)
+        val sizeSlider   = sv.findViewById<SeekBar>(R.id.overlay_size_slider)
+        val sizeLabel    = sv.findViewById<TextView>(R.id.overlay_size_value)
+        val heightSlider = sv.findViewById<SeekBar>(R.id.overlay_height_slider)
+        val heightLabel  = sv.findViewById<TextView>(R.id.overlay_height_value)
 
-        // Alpha: SeekBar 0..90 → value 10..100
-        alphaSlider.progress = (alpha - 10).coerceIn(0, 90)
-        alphaLabel.text = "$alpha%"
+        alphaSlider.progress = (alpha - 10).coerceIn(0, 90); alphaLabel.text = "$alpha%"
+        sizeSlider.progress  = (widthPct - 30).coerceIn(0, 70); sizeLabel.text = "$widthPct%"
+        heightSlider.progress = ((heightDp - 100) / 50).coerceIn(0, 9); heightLabel.text = "${heightDp}dp"
 
-        // Width: SeekBar 0..70 → value 30..100%
-        sizeSlider.progress = (widthPct - 30).coerceIn(0, 70)
-        sizeLabel.text = "$widthPct%"
-
-        alphaSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
-                val v = p + 10; alphaLabel.text = "$v%"
-                if (fromUser) { appSettings.setOverlayBackgroundAlpha(v); applyBackgroundAlpha(lyricsWindowView) }
+        alphaSlider.setOnSeekBarChangeListener(simpleSeekListener { p ->
+            val v = p + 10; alphaLabel.text = "$v%"
+            appSettings.setOverlayBackgroundAlpha(v); applyBackgroundAlpha(lyricsWindowView)
+        })
+        sizeSlider.setOnSeekBarChangeListener(simpleSeekListener { p ->
+            val pct = p + 30; sizeLabel.text = "$pct%"
+            appSettings.setOverlayWidthPercent(pct)
+            lyricsParams?.let { lp ->
+                lp.width = (resources.displayMetrics.widthPixels * pct / 100f).toInt()
+                lyricsWindowView?.let { windowManager.updateViewLayout(it, lp) }
             }
-            override fun onStartTrackingTouch(sb: SeekBar?) = Unit
-            override fun onStopTrackingTouch(sb: SeekBar?) = Unit
+        })
+        heightSlider.setOnSeekBarChangeListener(simpleSeekListener { p ->
+            val dp = 100 + p * 50; heightLabel.text = "${dp}dp"
+            appSettings.setOverlayHeightDp(dp)
+            lyricViewX?.let {
+                val px = (dp * resources.displayMetrics.density).toInt()
+                it.layoutParams = it.layoutParams.also { lp -> lp.height = px }
+            }
+            lyricsWindowView?.let { windowManager.updateViewLayout(it, lyricsParams) }
         })
 
-        sizeSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
-                val pct = p + 30; sizeLabel.text = "$pct%"
-                if (fromUser) {
-                    appSettings.setOverlayWidthPercent(pct)
-                    lyricsParams?.let { lp ->
-                        lp.width = (resources.displayMetrics.widthPixels * pct / 100f).toInt()
-                        lyricsWindowView?.let { windowManager.updateViewLayout(it, lp) }
-                    }
-                }
-            }
-            override fun onStartTrackingTouch(sb: SeekBar?) = Unit
-            override fun onStopTrackingTouch(sb: SeekBar?) = Unit
-        })
-
-        // Tap extérieur → ferme le panneau
         sv.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_OUTSIDE) {
-                toggleSettingsPanel(ctx, nearY); true
-            } else false
+            if (event.action == MotionEvent.ACTION_OUTSIDE) { toggleSettingsPanel(ctx, nearY); true } else false
         }
 
         runCatching { windowManager.addView(sv, sParams) }
@@ -274,18 +263,21 @@ class LyricsOverlayService : Service() {
         settingsWindowView = sv; settingsParams = sParams
     }
 
+    private fun simpleSeekListener(onChange: (Int) -> Unit) = object : SeekBar.OnSeekBarChangeListener {
+        override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) { if (fromUser) onChange(p) }
+        override fun onStartTrackingTouch(sb: SeekBar?) = Unit
+        override fun onStopTrackingTouch(sb: SeekBar?) = Unit
+    }
+
     private fun applyBackgroundAlpha(view: View?) {
         view ?: return
-        val alpha = appSettings.getOverlayBackgroundAlpha()
-        val v = (alpha * 255 / 100).coerceIn(0, 255)
+        val v = (appSettings.getOverlayBackgroundAlpha() * 255 / 100).coerceIn(0, 255)
         val bg = view.background
         if (bg is GradientDrawable) bg.alpha = v else bg?.alpha = v
     }
 
-    private fun sizeWidthPx(screenW: Int): Int {
-        val pct = appSettings.getOverlayWidthPercent()
-        return (screenW * pct / 100f).toInt()
-    }
+    private fun sizeWidthPx(screenW: Int): Int =
+        (screenW * appSettings.getOverlayWidthPercent() / 100f).toInt()
 
     private fun loadLyrics(plain: String, synced: String?) {
         if (!synced.isNullOrBlank()) {
@@ -300,14 +292,14 @@ class LyricsOverlayService : Service() {
     fun updatePosition(timeMs: Long) { lyricViewX?.updateTime(timeMs) }
 
     private fun setupLyricsDrag(view: View, params: WindowManager.LayoutParams) {
-        var startX = 0; var startY = 0; var touchStartX = 0f; var touchStartY = 0f
+        var startX = 0; var startY = 0; var tx = 0f; var ty = 0f
         view.setOnTouchListener { _, event ->
             if (isTouchThrough) return@setOnTouchListener false
             when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> { startX = params.x; startY = params.y; touchStartX = event.rawX; touchStartY = event.rawY; true }
+                MotionEvent.ACTION_DOWN -> { startX = params.x; startY = params.y; tx = event.rawX; ty = event.rawY; true }
                 MotionEvent.ACTION_MOVE -> {
-                    params.x = startX + (event.rawX - touchStartX).toInt()
-                    params.y = startY + (event.rawY - touchStartY).toInt()
+                    params.x = startX + (event.rawX - tx).toInt()
+                    params.y = startY + (event.rawY - ty).toInt()
                     lyricsWindowView?.let { windowManager.updateViewLayout(it, params) }
                     controlsParams?.let { cp -> cp.y = params.y; controlsWindowView?.let { windowManager.updateViewLayout(it, cp) } }
                     true
@@ -335,8 +327,8 @@ class LyricsOverlayService : Service() {
 
     private fun removeOverlay() {
         settingsWindowView?.let { runCatching { windowManager.removeView(it) } }
-        lyricsWindowView?.let { runCatching { windowManager.removeView(it) } }
         controlsWindowView?.let { runCatching { windowManager.removeView(it) } }
+        lyricsWindowView?.let { runCatching { windowManager.removeView(it) } }
         lyricsWindowView = null; lyricsTextView = null; lyricViewX = null; lyricsParams = null
         controlsWindowView = null; controlsParams = null; touchToggleButton = null
         settingsWindowView = null; settingsParams = null
@@ -390,21 +382,19 @@ class LyricsOverlayService : Service() {
         private const val TAG = "LyricsOverlayService"
         private const val NOTIFICATION_CHANNEL_ID = "lyrics_overlay"
         private const val NOTIFICATION_ID = 4201
+
         var instance: LyricsOverlayService? = null
             private set
-        const val ACTION_START = "io.github.teccheck.fastlyrics.action.OVERLAY_START"
-        const val ACTION_STOP = "io.github.teccheck.fastlyrics.action.OVERLAY_STOP"
-        const val ACTION_UPDATE_LYRICS = "io.github.teccheck.fastlyrics.action.OVERLAY_UPDATE"
+
+        const val ACTION_START               = "io.github.teccheck.fastlyrics.action.OVERLAY_START"
+        const val ACTION_STOP                = "io.github.teccheck.fastlyrics.action.OVERLAY_STOP"
+        const val ACTION_UPDATE_LYRICS       = "io.github.teccheck.fastlyrics.action.OVERLAY_UPDATE"
         const val ACTION_TOGGLE_TOUCH_THROUGH = "io.github.teccheck.fastlyrics.action.OVERLAY_TOGGLE_TOUCH"
-        const val EXTRA_LYRICS = "extra_lyrics"
+
+        const val EXTRA_LYRICS        = "extra_lyrics"
         const val EXTRA_SYNCED_LYRICS = "extra_synced_lyrics"
-        const val EXTRA_TITLE = "extra_title"
-        const val EXTRA_ARTIST = "extra_artist"
+        const val EXTRA_TITLE         = "extra_title"
+        const val EXTRA_ARTIST        = "extra_artist"
     }
 }
-
-
-
-
-
 

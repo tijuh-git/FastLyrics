@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings as AndroidSettings
+import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.Menu
@@ -313,23 +314,33 @@ class FastLyricsFragment : Fragment() {
             return
         }
 
-        val overlayIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
-            action = LyricsOverlayService.ACTION_START
-            putExtra(LyricsOverlayService.EXTRA_LYRICS, lyricsViewModel.state.getLyrics())
+        runCatching {
+            val overlayIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
+                action = LyricsOverlayService.ACTION_START
+                putExtra(LyricsOverlayService.EXTRA_LYRICS, lyricsViewModel.state.getLyrics())
+            }
+            ContextCompat.startForegroundService(requireContext(), overlayIntent)
+            isOverlayRunning = true
+            updateOverlayButtonState()
+        }.onFailure {
+            Log.e(TAG, "Failed to start overlay service", it)
+            Toast.makeText(requireContext(), getString(R.string.overlay_start_failed), Toast.LENGTH_LONG).show()
         }
-        ContextCompat.startForegroundService(requireContext(), overlayIntent)
-        isOverlayRunning = true
-        updateOverlayButtonState()
     }
 
     private fun stopOverlayIfRunning() {
         if (!isOverlayRunning) return
 
-        val stopIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
-            action = LyricsOverlayService.ACTION_STOP
+        runCatching {
+            val stopIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
+                action = LyricsOverlayService.ACTION_STOP
+            }
+            requireContext().startService(stopIntent)
+            isOverlayRunning = false
+        }.onFailure {
+            Log.e(TAG, "Failed to stop overlay service", it)
+            isOverlayRunning = false
         }
-        requireContext().startService(stopIntent)
-        isOverlayRunning = false
     }
 
     private fun pushOverlayLyricsIfRunning(lyrics: String) {
@@ -347,6 +358,10 @@ class FastLyricsFragment : Fragment() {
             setIconResource(if (isOverlayRunning) R.drawable.baseline_close_24 else R.drawable.baseline_drag_handle_24)
             text = getString(if (isOverlayRunning) R.string.toggle_overlay_stop else R.string.toggle_overlay_start)
         }
+    }
+
+    companion object {
+        private const val TAG = "FastLyricsOverlay"
     }
 
 }

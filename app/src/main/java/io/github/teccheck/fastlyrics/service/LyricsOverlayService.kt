@@ -11,6 +11,7 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -43,27 +44,32 @@ class LyricsOverlayService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when (intent?.action) {
-            ACTION_STOP -> {
-                stopSelf()
-                return START_NOT_STICKY
-            }
+        runCatching {
+            when (intent?.action) {
+                ACTION_STOP -> {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
 
-            ACTION_TOGGLE_TOUCH_THROUGH -> {
-                setTouchThrough(!isTouchThrough)
-                updateNotification()
-                return START_STICKY
-            }
-
-            ACTION_UPDATE_LYRICS, ACTION_START -> {
-                val lyrics = intent.getStringExtra(EXTRA_LYRICS).orEmpty()
-                ensureOverlayVisible()
-                updateLyrics(lyrics)
-                if (intent.action == ACTION_START) {
-                    setTouchThrough(false)
+                ACTION_TOGGLE_TOUCH_THROUGH -> {
+                    setTouchThrough(!isTouchThrough)
                     updateNotification()
+                    return START_STICKY
+                }
+
+                ACTION_UPDATE_LYRICS, ACTION_START -> {
+                    val lyrics = intent.getStringExtra(EXTRA_LYRICS).orEmpty()
+                    ensureOverlayVisible()
+                    updateLyrics(lyrics)
+                    if (intent.action == ACTION_START) {
+                        setTouchThrough(false)
+                        updateNotification()
+                    }
                 }
             }
+        }.onFailure {
+            Log.e(TAG, "Overlay command failure", it)
+            stopSelf()
         }
 
         return START_STICKY
@@ -113,14 +119,26 @@ class LyricsOverlayService : Service() {
 
         setupDrag(view, params)
 
-        windowManager.addView(view, params)
+        runCatching {
+            windowManager.addView(view, params)
+        }.onFailure {
+            Log.e(TAG, "Failed to add overlay view", it)
+            stopSelf()
+            return
+        }
 
         overlayView = view
         lyricsView = textLyrics
         touchToggleButton = buttonTouchToggle
         layoutParams = params
 
-        startForeground(NOTIFICATION_ID, buildNotification())
+        runCatching {
+            startForeground(NOTIFICATION_ID, buildNotification())
+        }.onFailure {
+            Log.e(TAG, "Failed to start foreground service", it)
+            stopSelf()
+            return
+        }
         syncTouchToggleUi()
     }
 
@@ -240,8 +258,12 @@ class LyricsOverlayService : Service() {
     }
 
     private fun updateNotification() {
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(NOTIFICATION_ID, buildNotification())
+        runCatching {
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.notify(NOTIFICATION_ID, buildNotification())
+        }.onFailure {
+            Log.e(TAG, "Failed to update overlay notification", it)
+        }
     }
 
     private fun createNotificationChannel() {
@@ -257,6 +279,7 @@ class LyricsOverlayService : Service() {
     }
 
     companion object {
+        private const val TAG = "LyricsOverlayService"
         private const val NOTIFICATION_CHANNEL_ID = "lyrics_overlay"
         private const val NOTIFICATION_ID = 4201
 
@@ -268,6 +291,7 @@ class LyricsOverlayService : Service() {
         const val EXTRA_LYRICS = "extra_lyrics"
     }
 }
+
 
 
 

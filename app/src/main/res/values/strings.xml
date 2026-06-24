@@ -40,6 +40,7 @@
     <string name="overlay_enable_touch_through">Enable pass-through</string>
     <string name="overlay_disable_touch_through">Disable pass-through</string>
     <string name="overlay_permission_required">Enable "Display over other apps" permission first.</string>
+    <string name="overlay_start_failed">Could not start floating lyrics on this device.</string>
     <string name="overlay_notification_channel_name">Lyrics overlay</string>
     <string name="overlay_notification_title">Lyrics overlay active</string>
     <string name="overlay_notification_text">Use actions to toggle pass-through or stop overlay.</string>

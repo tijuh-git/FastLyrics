@@ -14,12 +14,12 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.GestureDetector
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
-import androidx.core.content.ContextCompat
 import dev.forkhandles.result4k.Failure
 import dev.forkhandles.result4k.Result
 import dev.forkhandles.result4k.Success
@@ -319,7 +319,7 @@ class FastLyricsFragment : Fragment() {
                 action = LyricsOverlayService.ACTION_START
                 putExtra(LyricsOverlayService.EXTRA_LYRICS, lyricsViewModel.state.getLyrics())
             }
-            ContextCompat.startForegroundService(requireContext(), overlayIntent)
+            requireContext().startService(overlayIntent)
             isOverlayRunning = true
             updateOverlayButtonState()
         }.onFailure {

@@ -1,14 +1,8 @@
 package io.github.teccheck.fastlyrics.service
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
@@ -19,8 +13,6 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.TextView
-import androidx.core.app.NotificationCompat
-import io.github.teccheck.fastlyrics.MainActivity
 import io.github.teccheck.fastlyrics.R
 import kotlin.math.roundToInt
 
@@ -40,7 +32,6 @@ class LyricsOverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -53,7 +44,6 @@ class LyricsOverlayService : Service() {
 
                 ACTION_TOGGLE_TOUCH_THROUGH -> {
                     setTouchThrough(!isTouchThrough)
-                    updateNotification()
                     return START_STICKY
                 }
 
@@ -63,7 +53,6 @@ class LyricsOverlayService : Service() {
                     updateLyrics(lyrics)
                     if (intent.action == ACTION_START) {
                         setTouchThrough(false)
-                        updateNotification()
                     }
                 }
             }
@@ -76,8 +65,6 @@ class LyricsOverlayService : Service() {
     }
 
     override fun onDestroy() {
-        @Suppress("DEPRECATION")
-        stopForeground(true)
         removeOverlay()
         super.onDestroy()
     }
@@ -114,7 +101,6 @@ class LyricsOverlayService : Service() {
 
         buttonTouchToggle.setOnClickListener {
             setTouchThrough(!isTouchThrough)
-            updateNotification()
         }
 
         setupDrag(view, params)
@@ -132,13 +118,6 @@ class LyricsOverlayService : Service() {
         touchToggleButton = buttonTouchToggle
         layoutParams = params
 
-        runCatching {
-            startForeground(NOTIFICATION_ID, buildNotification())
-        }.onFailure {
-            Log.e(TAG, "Failed to start foreground service", it)
-            stopSelf()
-            return
-        }
         syncTouchToggleUi()
     }
 
@@ -221,70 +200,8 @@ class LyricsOverlayService : Service() {
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
     }
 
-    private fun buildNotification(): Notification {
-        val openAppIntent = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val stopIntent = PendingIntent.getService(
-            this,
-            1,
-            Intent(this, LyricsOverlayService::class.java).apply { action = ACTION_STOP },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val touchIntent = PendingIntent.getService(
-            this,
-            2,
-            Intent(this, LyricsOverlayService::class.java).apply { action = ACTION_TOGGLE_TOUCH_THROUGH },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val touchActionTitle =
-            if (isTouchThrough) R.string.overlay_disable_touch_through else R.string.overlay_enable_touch_through
-
-        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.round_music_note_24)
-            .setContentTitle(getString(R.string.overlay_notification_title))
-            .setContentText(getString(R.string.overlay_notification_text))
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setContentIntent(openAppIntent)
-            .addAction(R.drawable.baseline_drag_handle_24, getString(touchActionTitle), touchIntent)
-            .addAction(R.drawable.baseline_close_24, getString(R.string.overlay_stop), stopIntent)
-            .build()
-    }
-
-    private fun updateNotification() {
-        runCatching {
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.notify(NOTIFICATION_ID, buildNotification())
-        }.onFailure {
-            Log.e(TAG, "Failed to update overlay notification", it)
-        }
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            getString(R.string.overlay_notification_channel_name),
-            NotificationManager.IMPORTANCE_LOW
-        )
-        notificationManager.createNotificationChannel(channel)
-    }
-
     companion object {
         private const val TAG = "LyricsOverlayService"
-        private const val NOTIFICATION_CHANNEL_ID = "lyrics_overlay"
-        private const val NOTIFICATION_ID = 4201
 
         const val ACTION_START = "io.github.teccheck.fastlyrics.action.OVERLAY_START"
         const val ACTION_STOP = "io.github.teccheck.fastlyrics.action.OVERLAY_STOP"
@@ -294,6 +211,7 @@ class LyricsOverlayService : Service() {
         const val EXTRA_LYRICS = "extra_lyrics"
     }
 }
+
 
 
 

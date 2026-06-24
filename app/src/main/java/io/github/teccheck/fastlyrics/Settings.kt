@@ -47,6 +47,22 @@ class Settings(context: Context) {
         sharedPreferences.edit().putString(KEY_OVERLAY_LAST_ERROR, error).commit()
     }
 
+    /** 0 = transparent, 100 = opaque */
+    fun getOverlayBackgroundAlpha(): Int =
+        sharedPreferences.getInt(KEY_OVERLAY_ALPHA, DEFAULT_OVERLAY_ALPHA)
+
+    fun setOverlayBackgroundAlpha(value: Int) {
+        sharedPreferences.edit().putInt(KEY_OVERLAY_ALPHA, value.coerceIn(10, 100)).apply()
+    }
+
+    /** "S", "M", "L" */
+    fun getOverlaySize(): String =
+        sharedPreferences.getString(KEY_OVERLAY_SIZE, DEFAULT_OVERLAY_SIZE) ?: DEFAULT_OVERLAY_SIZE
+
+    fun setOverlaySize(size: String) {
+        sharedPreferences.edit().putString(KEY_OVERLAY_SIZE, size).apply()
+    }
+
     companion object {
         private const val KEY_APP_THEME = "app_theme"
         private const val KEY_MATERIAL_STYLE = "material_style"
@@ -56,6 +72,8 @@ class Settings(context: Context) {
         private const val KEY_FULLSCREEN_LYRICS = "fullscreen_lyrics"
         private const val KEY_OVERLAY_RUNNING = "overlay_running"
         private const val KEY_OVERLAY_LAST_ERROR = "overlay_last_error"
+        private const val KEY_OVERLAY_ALPHA = "overlay_alpha"
+        private const val KEY_OVERLAY_SIZE = "overlay_size"
 
         private const val MATERIAL_STYLE_ONE = "1"
         private const val MATERIAL_STYLE_TWO = "2"
@@ -63,5 +81,7 @@ class Settings(context: Context) {
 
         private const val DEFAULT_APP_THEME = "-1"
         private const val DEFAULT_MATERIAL_STYLE = MATERIAL_STYLE_TWO
+        const val DEFAULT_OVERLAY_ALPHA = 75
+        const val DEFAULT_OVERLAY_SIZE = "M"
     }
 }

@@ -35,6 +35,12 @@ class Settings(context: Context) {
         sharedPreferences.edit().putBoolean(KEY_FULLSCREEN_LYRICS, enabled).apply()
     }
 
+    fun isOverlayServiceRunning(): Boolean = sharedPreferences.getBoolean(KEY_OVERLAY_RUNNING, false)
+
+    fun setOverlayServiceRunning(running: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_OVERLAY_RUNNING, running).apply()
+    }
+
     companion object {
         private const val KEY_APP_THEME = "app_theme"
         private const val KEY_MATERIAL_STYLE = "material_style"
@@ -42,6 +48,7 @@ class Settings(context: Context) {
         private const val KEY_SYNCED_LYRICS_BY_DEFAULT = "synced_lyrics_by_default"
         private const val KEY_TEXT_SIZE = "text_size"
         private const val KEY_FULLSCREEN_LYRICS = "fullscreen_lyrics"
+        private const val KEY_OVERLAY_RUNNING = "overlay_running"
 
         private const val MATERIAL_STYLE_ONE = "1"
         private const val MATERIAL_STYLE_TWO = "2"

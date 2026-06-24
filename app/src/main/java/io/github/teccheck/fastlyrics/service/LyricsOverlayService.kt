@@ -4,7 +4,7 @@ import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.IBinder
-import android.provider.Settings
+import android.provider.Settings as AndroidSettings
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -13,6 +13,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.TextView
+import io.github.teccheck.fastlyrics.Settings
 import io.github.teccheck.fastlyrics.R
 import kotlin.math.roundToInt
 
@@ -22,6 +23,7 @@ class LyricsOverlayService : Service() {
     private var overlayView: View? = null
     private var lyricsView: TextView? = null
     private var touchToggleButton: ImageButton? = null
+    private lateinit var appSettings: Settings
 
     private var isTouchThrough = false
 
@@ -32,6 +34,8 @@ class LyricsOverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        appSettings = Settings(this)
+        appSettings.setOverlayServiceRunning(false)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -65,6 +69,7 @@ class LyricsOverlayService : Service() {
     }
 
     override fun onDestroy() {
+        appSettings.setOverlayServiceRunning(false)
         removeOverlay()
         super.onDestroy()
     }
@@ -72,7 +77,8 @@ class LyricsOverlayService : Service() {
     private fun ensureOverlayVisible() {
         if (overlayView != null) return
 
-        if (!Settings.canDrawOverlays(this)) {
+        if (!AndroidSettings.canDrawOverlays(this)) {
+            appSettings.setOverlayServiceRunning(false)
             stopSelf()
             return
         }
@@ -109,6 +115,7 @@ class LyricsOverlayService : Service() {
             windowManager.addView(view, params)
         }.onFailure {
             Log.e(TAG, "Failed to add overlay view", it)
+            appSettings.setOverlayServiceRunning(false)
             stopSelf()
             return
         }
@@ -117,6 +124,7 @@ class LyricsOverlayService : Service() {
         lyricsView = textLyrics
         touchToggleButton = buttonTouchToggle
         layoutParams = params
+        appSettings.setOverlayServiceRunning(true)
 
         syncTouchToggleUi()
     }
@@ -193,6 +201,7 @@ class LyricsOverlayService : Service() {
         lyricsView = null
         touchToggleButton = null
         layoutParams = null
+        appSettings.setOverlayServiceRunning(false)
     }
 
     private fun defaultFlags(): Int {
@@ -211,6 +220,7 @@ class LyricsOverlayService : Service() {
         const val EXTRA_LYRICS = "extra_lyrics"
     }
 }
+
 
 
 

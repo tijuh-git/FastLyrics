@@ -129,6 +129,7 @@ class FastLyricsFragment : Fragment() {
         binding.lyricsView.toggleOverlay.setOnClickListener { toggleOverlayMode() }
 
         isFullscreenMode = settings.getFullscreenLyricsMode()
+        refreshOverlayState()
         applyFullscreenMode(isFullscreenMode)
         updateOverlayButtonState()
 
@@ -140,6 +141,7 @@ class FastLyricsFragment : Fragment() {
 
         lyricsViewModel.setupSongMetaListener()
         setNewState(lyricsViewModel.state)
+        refreshOverlayState()
         updateOverlayButtonState()
     }
 
@@ -297,10 +299,10 @@ class FastLyricsFragment : Fragment() {
     }
 
     private fun toggleOverlayMode() {
+        refreshOverlayState()
+
         if (isOverlayRunning) {
             stopOverlayIfRunning()
-            updateOverlayButtonState()
-            Toast.makeText(requireContext(), getString(R.string.overlay_stopped), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -321,20 +323,27 @@ class FastLyricsFragment : Fragment() {
                 putExtra(LyricsOverlayService.EXTRA_LYRICS, lyricsViewModel.state.getLyrics())
             }
             requireContext().startService(overlayIntent)
-            isOverlayRunning = true
-            updateOverlayButtonState()
-            Toast.makeText(requireContext(), getString(R.string.overlay_started), Toast.LENGTH_SHORT).show()
+            binding.root.postDelayed({
+                refreshOverlayState()
+                updateOverlayButtonState()
 
-            // Move app to background so the floating lyrics can be seen above other apps.
-            val moved = requireActivity().moveTaskToBack(true)
-            if (!moved) {
-                startActivity(
-                    Intent(Intent.ACTION_MAIN).apply {
-                        addCategory(Intent.CATEGORY_HOME)
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                if (isOverlayRunning) {
+                    Toast.makeText(requireContext(), getString(R.string.overlay_started), Toast.LENGTH_SHORT).show()
+
+                    // Move app to background so the floating lyrics can be seen above other apps.
+                    val moved = requireActivity().moveTaskToBack(true)
+                    if (!moved) {
+                        startActivity(
+                            Intent(Intent.ACTION_MAIN).apply {
+                                addCategory(Intent.CATEGORY_HOME)
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                        )
                     }
-                )
-            }
+                } else {
+                    Toast.makeText(requireContext(), getString(R.string.overlay_not_visible), Toast.LENGTH_LONG).show()
+                }
+            }, 350)
         }.onFailure {
             Log.e(TAG, "Failed to start overlay service", it)
             Toast.makeText(requireContext(), getString(R.string.overlay_start_failed), Toast.LENGTH_LONG).show()
@@ -349,21 +358,32 @@ class FastLyricsFragment : Fragment() {
                 action = LyricsOverlayService.ACTION_STOP
             }
             requireContext().startService(stopIntent)
-            isOverlayRunning = false
+            binding.root.postDelayed({
+                refreshOverlayState()
+                updateOverlayButtonState()
+                if (!isOverlayRunning) {
+                    Toast.makeText(requireContext(), getString(R.string.overlay_stopped), Toast.LENGTH_SHORT).show()
+                }
+            }, 200)
         }.onFailure {
             Log.e(TAG, "Failed to stop overlay service", it)
             isOverlayRunning = false
+            updateOverlayButtonState()
         }
     }
 
     private fun pushOverlayLyricsIfRunning(lyrics: String) {
-        if (!isOverlayRunning || lyrics.isBlank()) return
+        if (!settings.isOverlayServiceRunning() || lyrics.isBlank()) return
 
         val updateIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
             action = LyricsOverlayService.ACTION_UPDATE_LYRICS
             putExtra(LyricsOverlayService.EXTRA_LYRICS, lyrics)
         }
         requireContext().startService(updateIntent)
+    }
+
+    private fun refreshOverlayState() {
+        isOverlayRunning = settings.isOverlayServiceRunning()
     }
 
     private fun updateOverlayButtonState() {

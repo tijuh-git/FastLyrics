@@ -1,6 +1,9 @@
 package io.github.teccheck.fastlyrics.ui.fastlyrics
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings as AndroidSettings
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.Menu
@@ -15,6 +18,7 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.core.content.ContextCompat
 import dev.forkhandles.result4k.Failure
 import dev.forkhandles.result4k.Result
 import dev.forkhandles.result4k.Success
@@ -25,17 +29,16 @@ import io.github.teccheck.fastlyrics.databinding.FragmentFastLyricsBinding
 import io.github.teccheck.fastlyrics.exceptions.LyricsApiException
 import io.github.teccheck.fastlyrics.model.SongMeta
 import io.github.teccheck.fastlyrics.model.SongWithLyrics
+import io.github.teccheck.fastlyrics.service.LyricsOverlayService
 import io.github.teccheck.fastlyrics.utils.Utils
 import io.github.teccheck.fastlyrics.utils.Utils.copyToClipboard
 import io.github.teccheck.fastlyrics.utils.Utils.openLink
 import io.github.teccheck.fastlyrics.utils.Utils.setVisible
 import io.github.teccheck.fastlyrics.utils.Utils.share
 
-import android.widget.TextView
-import androidx.appcompat.widget.SwitchCompat
-import androidx.core.content.ContextCompat
 import com.squareup.picasso.Picasso
 import android.graphics.drawable.BitmapDrawable
+import android.widget.Toast
 
 class FastLyricsFragment : Fragment() {
 
@@ -48,6 +51,7 @@ class FastLyricsFragment : Fragment() {
     private lateinit var settings: Settings
 
     private var isFullscreenMode = false
+    private var isOverlayRunning = false
     private lateinit var doubleTapDetector: GestureDetector
 
     private val menuProvider = object : MenuProvider {
@@ -121,9 +125,11 @@ class FastLyricsFragment : Fragment() {
         binding.lyricsView.textLyrics.setOnTouchListener(onLyricsTouch)
         binding.lyricsView.lyricViewX.setOnTouchListener(onLyricsTouch)
         binding.lyricsView.toggleFullscreen.setOnClickListener { toggleFullscreenMode() }
+        binding.lyricsView.toggleOverlay.setOnClickListener { toggleOverlayMode() }
 
         isFullscreenMode = settings.getFullscreenLyricsMode()
         applyFullscreenMode(isFullscreenMode)
+        updateOverlayButtonState()
 
         return binding.root
     }
@@ -133,6 +139,7 @@ class FastLyricsFragment : Fragment() {
 
         lyricsViewModel.setupSongMetaListener()
         setNewState(lyricsViewModel.state)
+        updateOverlayButtonState()
     }
 
     override fun onDestroyView() {
@@ -187,6 +194,7 @@ class FastLyricsFragment : Fragment() {
         // Lyrics
         binding.lyricsView.root.setVisible(state.showText)
         binding.lyricsView.textLyrics.text = state.getLyrics()
+        pushOverlayLyricsIfRunning(state.getLyrics())
         state.getSyncedLyrics()?.let { binding.lyricsView.lyricViewX.loadLyric(it) }
 
         state.getSongProvider()?.let {
@@ -285,6 +293,60 @@ class FastLyricsFragment : Fragment() {
 
     private fun setTime(time: Long) {
         binding.lyricsView.lyricViewX.updateTime(time)
+    }
+
+    private fun toggleOverlayMode() {
+        if (isOverlayRunning) {
+            stopOverlayIfRunning()
+            updateOverlayButtonState()
+            return
+        }
+
+        if (!AndroidSettings.canDrawOverlays(requireContext())) {
+            Toast.makeText(requireContext(), getString(R.string.overlay_permission_required), Toast.LENGTH_LONG).show()
+            startActivity(
+                Intent(
+                    AndroidSettings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:${requireContext().packageName}")
+                )
+            )
+            return
+        }
+
+        val overlayIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
+            action = LyricsOverlayService.ACTION_START
+            putExtra(LyricsOverlayService.EXTRA_LYRICS, lyricsViewModel.state.getLyrics())
+        }
+        ContextCompat.startForegroundService(requireContext(), overlayIntent)
+        isOverlayRunning = true
+        updateOverlayButtonState()
+    }
+
+    private fun stopOverlayIfRunning() {
+        if (!isOverlayRunning) return
+
+        val stopIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
+            action = LyricsOverlayService.ACTION_STOP
+        }
+        requireContext().startService(stopIntent)
+        isOverlayRunning = false
+    }
+
+    private fun pushOverlayLyricsIfRunning(lyrics: String) {
+        if (!isOverlayRunning || lyrics.isBlank()) return
+
+        val updateIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
+            action = LyricsOverlayService.ACTION_UPDATE_LYRICS
+            putExtra(LyricsOverlayService.EXTRA_LYRICS, lyrics)
+        }
+        requireContext().startService(updateIntent)
+    }
+
+    private fun updateOverlayButtonState() {
+        binding.lyricsView.toggleOverlay.apply {
+            setIconResource(if (isOverlayRunning) R.drawable.baseline_close_24 else R.drawable.baseline_drag_handle_24)
+            text = getString(if (isOverlayRunning) R.string.toggle_overlay_stop else R.string.toggle_overlay_start)
+        }
     }
 
 }

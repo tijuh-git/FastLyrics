@@ -31,6 +31,18 @@
     <string name="menu_source" translatable="false">Source</string>
     <string name="toggle_fullscreen_enter">Reduce</string>
     <string name="toggle_fullscreen_exit">Restore</string>
+    <string name="toggle_overlay_start">Float</string>
+    <string name="toggle_overlay_stop">Stop Float</string>
+    <string name="overlay_title">Lyrics Overlay</string>
+    <string name="overlay_stop">Stop</string>
+    <string name="overlay_touch_through_on">Touch-through is ON</string>
+    <string name="overlay_touch_through_off">Touch-through is OFF</string>
+    <string name="overlay_enable_touch_through">Enable pass-through</string>
+    <string name="overlay_disable_touch_through">Disable pass-through</string>
+    <string name="overlay_permission_required">Enable "Display over other apps" permission first.</string>
+    <string name="overlay_notification_channel_name">Lyrics overlay</string>
+    <string name="overlay_notification_title">Lyrics overlay active</string>
+    <string name="overlay_notification_text">Use actions to toggle pass-through or stop overlay.</string>
 
     <!-- Saved songs view -->
     <string name="delete">Delete</string>

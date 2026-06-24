@@ -6,17 +6,49 @@
     android:layout_height="wrap_content"
     android:background="@drawable/overlay_lyrics_background"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="10dp">
 
-    <!-- Synced LyricViewX (used when LRC available) -->
+    <!-- Mini header: title + artist (like main app header, compact) -->
+    <LinearLayout
+        android:id="@+id/overlay_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/overlay_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text=""
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/overlay_artist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text=""
+            android:textColor="#BBFFFFFF"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <!-- Synced LyricViewX -->
     <com.dirror.lyricviewx.LyricViewX
         android:id="@+id/overlay_lyric_view_x"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="180dp"
         android:visibility="gone"
         app:lrcPadding="8dp" />
 
-    <!-- Static lyrics (fallback) -->
+    <!-- Static lyrics -->
     <TextView
         android:id="@+id/overlay_text_lyrics"
         android:layout_width="match_parent"
@@ -25,7 +57,39 @@
         android:maxLines="12"
         android:text="..."
         android:textColor="@android:color/white"
-        android:textSize="18sp" />
+        android:textSize="17sp" />
+
+    <!-- Footer: Copy + Share (same as main app) -->
+    <LinearLayout
+        android:id="@+id/overlay_footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/overlay_btn_copy"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/copy"
+            android:padding="7dp"
+            android:src="?attr/actionModeCopyDrawable"
+            android:tint="#BBFFFFFF" />
+
+        <ImageButton
+            android:id="@+id/overlay_btn_share"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/share"
+            android:padding="7dp"
+            android:src="?attr/actionModeShareDrawable"
+            android:tint="#BBFFFFFF" />
+
+    </LinearLayout>
+
 
 </LinearLayout>
 

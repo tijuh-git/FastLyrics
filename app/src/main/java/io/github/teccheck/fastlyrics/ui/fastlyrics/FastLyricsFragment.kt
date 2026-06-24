@@ -327,6 +327,8 @@ class FastLyricsFragment : Fragment() {
                 action = LyricsOverlayService.ACTION_START
                 putExtra(LyricsOverlayService.EXTRA_LYRICS, lyricsViewModel.state.getLyrics())
                 putExtra(LyricsOverlayService.EXTRA_SYNCED_LYRICS, lyricsViewModel.state.getSyncedLyrics())
+                putExtra(LyricsOverlayService.EXTRA_TITLE, lyricsViewModel.state.getSongTitle())
+                putExtra(LyricsOverlayService.EXTRA_ARTIST, lyricsViewModel.state.getSongArtist())
             }
             requireContext().startService(overlayIntent)
             binding.root.postDelayed({
@@ -395,6 +397,8 @@ class FastLyricsFragment : Fragment() {
             action = LyricsOverlayService.ACTION_UPDATE_LYRICS
             putExtra(LyricsOverlayService.EXTRA_LYRICS, lyrics)
             putExtra(LyricsOverlayService.EXTRA_SYNCED_LYRICS, syncedLyrics)
+            putExtra(LyricsOverlayService.EXTRA_TITLE, lyricsViewModel.state.getSongTitle())
+            putExtra(LyricsOverlayService.EXTRA_ARTIST, lyricsViewModel.state.getSongArtist())
         }
         requireContext().startService(updateIntent)
     }

@@ -29,13 +29,19 @@ import kotlin.math.roundToInt
 class LyricsOverlayService : Service() {
 
     private lateinit var windowManager: WindowManager
-    private var overlayView: View? = null
-    private var lyricsView: TextView? = null
-    private var touchToggleButton: ImageButton? = null
     private lateinit var appSettings: Settings
 
+    // Main lyrics view (can be pass-through)
+    private var lyricsWindowView: View? = null
+    private var lyricsView: TextView? = null
+    private var lyricsParams: WindowManager.LayoutParams? = null
+
+    // Controls view (ALWAYS interactive, separate window)
+    private var controlsWindowView: View? = null
+    private var controlsParams: WindowManager.LayoutParams? = null
+    private var touchToggleButton: ImageButton? = null
+
     private var isTouchThrough = false
-    private var layoutParams: WindowManager.LayoutParams? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -50,21 +56,13 @@ class LyricsOverlayService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         runCatching {
             when (intent?.action) {
-                ACTION_STOP -> {
-                    stopSelf()
-                    return START_NOT_STICKY
-                }
-                ACTION_TOGGLE_TOUCH_THROUGH -> {
-                    setTouchThrough(!isTouchThrough)
-                    return START_STICKY
-                }
+                ACTION_STOP -> { stopSelf(); return START_NOT_STICKY }
+                ACTION_TOGGLE_TOUCH_THROUGH -> { setTouchThrough(!isTouchThrough); return START_STICKY }
                 ACTION_UPDATE_LYRICS, ACTION_START -> {
                     val lyrics = intent.getStringExtra(EXTRA_LYRICS).orEmpty()
                     ensureOverlayVisible()
                     updateLyrics(lyrics)
-                    if (intent.action == ACTION_START) {
-                        setTouchThrough(false)
-                    }
+                    if (intent.action == ACTION_START) setTouchThrough(false)
                 }
             }
         }.onFailure {
@@ -84,7 +82,7 @@ class LyricsOverlayService : Service() {
     }
 
     private fun ensureOverlayVisible() {
-        if (overlayView != null) return
+        if (lyricsWindowView != null) return
 
         if (!hasOverlayPermission()) {
             appSettings.setOverlayLastError("permission: canDrawOverlays=false")
@@ -94,56 +92,66 @@ class LyricsOverlayService : Service() {
         }
 
         val themedContext = ContextThemeWrapper(this, R.style.Theme_FastLyrics_Material2)
-        val view = LayoutInflater.from(themedContext).inflate(R.layout.overlay_lyrics, null)
-        val textLyrics = view.findViewById<TextView>(R.id.overlay_text_lyrics)
-        val buttonClose = view.findViewById<ImageButton>(R.id.overlay_button_close)
-        val buttonTouchToggle = view.findViewById<ImageButton>(R.id.overlay_button_touch_toggle)
+        val density = resources.displayMetrics.density
+        val screenW = resources.displayMetrics.widthPixels
+        val lyricsW = (screenW * 0.9f).roundToInt()
+        val topY = (density * 64).roundToInt()
 
-        val widthPx = (resources.displayMetrics.widthPixels * 0.9f).roundToInt()
+        // --- Lyrics window ---
+        val lyricsView = LayoutInflater.from(themedContext).inflate(R.layout.overlay_lyrics, null)
+            .also { it.findViewById<ImageButton>(R.id.overlay_button_touch_toggle)?.visibility = View.GONE
+                    it.findViewById<ImageButton>(R.id.overlay_button_close)?.visibility = View.GONE }
+        val lParams = WindowManager.LayoutParams(
+            lyricsW, WindowManager.LayoutParams.WRAP_CONTENT,
+            overlayWindowType(), defaultLyricsFlags(), PixelFormat.TRANSLUCENT
+        ).apply { gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL; y = topY }
 
-        val params = WindowManager.LayoutParams(
-            widthPx,
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            overlayWindowType(),
-            defaultFlags(),
-            PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-            y = (resources.displayMetrics.density * 64).roundToInt()
-        }
+        setupLyricsDrag(lyricsView, lParams)
 
-        buttonClose.setOnClickListener { stopSelf() }
-        buttonTouchToggle.setOnClickListener { setTouchThrough(!isTouchThrough) }
-
-        setupDrag(view, params)
-
-        runCatching {
-            windowManager.addView(view, params)
-        }.onFailure {
-            Log.e(TAG, "Failed to add overlay view", it)
-            appSettings.setOverlayLastError("addView: ${it.javaClass.simpleName}: ${it.message ?: "unknown"}")
+        runCatching { windowManager.addView(lyricsView, lParams) }.onFailure {
+            appSettings.setOverlayLastError("addView lyrics: ${it.javaClass.simpleName}: ${it.message ?: "unknown"}")
             appSettings.setOverlayServiceRunning(false)
             stopSelf()
             return
         }
 
-        overlayView = view
-        lyricsView = textLyrics
-        touchToggleButton = buttonTouchToggle
-        layoutParams = params
+        // --- Controls window (always interactive, always on top) ---
+        val ctrlView = LayoutInflater.from(themedContext).inflate(R.layout.overlay_controls, null)
+        val btnToggle = ctrlView.findViewById<ImageButton>(R.id.overlay_ctrl_touch_toggle)
+        val btnClose  = ctrlView.findViewById<ImageButton>(R.id.overlay_ctrl_close)
+        val ctrlParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+            overlayWindowType(),
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT
+        ).apply { gravity = Gravity.TOP or Gravity.END; y = topY }
+
+        btnClose.setOnClickListener { stopSelf() }
+        btnToggle.setOnClickListener { setTouchThrough(!isTouchThrough) }
+
+        runCatching { windowManager.addView(ctrlView, ctrlParams) }.onFailure {
+            Log.w(TAG, "Controls window failed, continuing without it", it)
+        }
+
+        this.lyricsWindowView = lyricsView
+        this.lyricsView = lyricsView.findViewById(R.id.overlay_text_lyrics)
+        this.lyricsParams = lParams
+        this.controlsWindowView = ctrlView
+        this.controlsParams = ctrlParams
+        this.touchToggleButton = btnToggle
+
         appSettings.setOverlayServiceRunning(true)
         appSettings.setOverlayLastError(null)
 
         runCatching { startForeground(NOTIFICATION_ID, buildNotification()) }
-            .onFailure { Log.w(TAG, "startForeground failed, continuing without notification", it) }
+            .onFailure { Log.w(TAG, "startForeground failed", it) }
 
         syncTouchToggleUi()
     }
 
-    private fun setupDrag(view: View, params: WindowManager.LayoutParams) {
+    private fun setupLyricsDrag(view: View, params: WindowManager.LayoutParams) {
         var startX = 0; var startY = 0
         var touchStartX = 0f; var touchStartY = 0f
-
         view.setOnTouchListener { _, event ->
             if (isTouchThrough) return@setOnTouchListener false
             when (event.actionMasked) {
@@ -154,7 +162,13 @@ class LyricsOverlayService : Service() {
                 MotionEvent.ACTION_MOVE -> {
                     params.x = startX + (event.rawX - touchStartX).toInt()
                     params.y = startY + (event.rawY - touchStartY).toInt()
-                    overlayView?.let { windowManager.updateViewLayout(it, params) }; true
+                    lyricsWindowView?.let { windowManager.updateViewLayout(it, params) }
+                    // Keep controls aligned with lyrics window
+                    controlsParams?.let { cp ->
+                        cp.y = params.y
+                        controlsWindowView?.let { windowManager.updateViewLayout(it, cp) }
+                    }
+                    true
                 }
                 else -> false
             }
@@ -168,10 +182,10 @@ class LyricsOverlayService : Service() {
 
     private fun setTouchThrough(enabled: Boolean) {
         isTouchThrough = enabled
-        val view = overlayView ?: return
-        val params = layoutParams ?: return
-        params.flags = if (enabled) defaultFlags() or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                       else defaultFlags()
+        val view = lyricsWindowView ?: return
+        val params = lyricsParams ?: return
+        params.flags = if (enabled) defaultLyricsFlags() or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                       else defaultLyricsFlags()
         windowManager.updateViewLayout(view, params)
         syncTouchToggleUi()
         updateNotification()
@@ -181,20 +195,18 @@ class LyricsOverlayService : Service() {
         touchToggleButton?.apply {
             setImageResource(if (isTouchThrough) R.drawable.baseline_check_circle_24 else R.drawable.baseline_drag_handle_24)
             contentDescription = getString(if (isTouchThrough) R.string.overlay_touch_through_on else R.string.overlay_touch_through_off)
-            alpha = if (isTouchThrough) 0.65f else 1f
         }
     }
 
     private fun removeOverlay() {
-        overlayView?.let {
-            runCatching { windowManager.removeView(it) }
-                .onFailure { error -> Log.w(TAG, "Overlay removeView ignored", error) }
-        }
-        overlayView = null; lyricsView = null; touchToggleButton = null; layoutParams = null
+        lyricsWindowView?.let { runCatching { windowManager.removeView(it) } }
+        controlsWindowView?.let { runCatching { windowManager.removeView(it) } }
+        lyricsWindowView = null; lyricsView = null; lyricsParams = null
+        controlsWindowView = null; controlsParams = null; touchToggleButton = null
         appSettings.setOverlayServiceRunning(false)
     }
 
-    private fun defaultFlags(): Int =
+    private fun defaultLyricsFlags(): Int =
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
 
     private fun overlayWindowType(): Int =
@@ -232,7 +244,7 @@ class LyricsOverlayService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val touchLabel = if (isTouchThrough) "▶ Interactive" else "👆 Pass-through"
-        val statusText = if (isTouchThrough) "Pass-through ON — tap ▶ Interactive to use overlay" else "Interactive — drag to move"
+        val statusText = if (isTouchThrough) "Pass-through ON" else "Interactive — drag to move"
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.round_music_note_24)
             .setContentTitle("Lyrics Overlay")
@@ -265,4 +277,3 @@ class LyricsOverlayService : Service() {
         const val EXTRA_LYRICS = "extra_lyrics"
     }
 }
-

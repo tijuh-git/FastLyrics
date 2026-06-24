@@ -198,7 +198,7 @@ class FastLyricsFragment : Fragment() {
         // Lyrics
         binding.lyricsView.root.setVisible(state.showText)
         binding.lyricsView.textLyrics.text = state.getLyrics()
-        pushOverlayLyricsIfRunning(state.getLyrics())
+        pushOverlayLyricsIfRunning(state.getLyrics(), state.getSyncedLyrics())
         state.getSyncedLyrics()?.let { binding.lyricsView.lyricViewX.loadLyric(it) }
 
         state.getSongProvider()?.let {
@@ -297,6 +297,7 @@ class FastLyricsFragment : Fragment() {
 
     private fun setTime(time: Long) {
         binding.lyricsView.lyricViewX.updateTime(time)
+        LyricsOverlayService.instance?.updatePosition(time)
     }
 
     private fun toggleOverlayMode() {
@@ -325,6 +326,7 @@ class FastLyricsFragment : Fragment() {
             val overlayIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
                 action = LyricsOverlayService.ACTION_START
                 putExtra(LyricsOverlayService.EXTRA_LYRICS, lyricsViewModel.state.getLyrics())
+                putExtra(LyricsOverlayService.EXTRA_SYNCED_LYRICS, lyricsViewModel.state.getSyncedLyrics())
             }
             requireContext().startService(overlayIntent)
             binding.root.postDelayed({
@@ -386,12 +388,13 @@ class FastLyricsFragment : Fragment() {
         }
     }
 
-    private fun pushOverlayLyricsIfRunning(lyrics: String) {
-        if (!settings.isOverlayServiceRunning() || lyrics.isBlank()) return
+    private fun pushOverlayLyricsIfRunning(lyrics: String, syncedLyrics: String?) {
+        if (!settings.isOverlayServiceRunning()) return
 
         val updateIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
             action = LyricsOverlayService.ACTION_UPDATE_LYRICS
             putExtra(LyricsOverlayService.EXTRA_LYRICS, lyrics)
+            putExtra(LyricsOverlayService.EXTRA_SYNCED_LYRICS, syncedLyrics)
         }
         requireContext().startService(updateIntent)
     }

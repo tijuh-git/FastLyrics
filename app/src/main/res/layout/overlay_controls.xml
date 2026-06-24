@@ -4,27 +4,41 @@
     android:layout_height="wrap_content"
     android:background="@drawable/overlay_lyrics_background"
     android:orientation="horizontal"
-    android:padding="4dp">
+    android:padding="2dp">
 
+    <!-- Open app -->
+    <ImageButton
+        android:id="@+id/overlay_ctrl_open_app"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/app_name"
+        android:padding="7dp"
+        android:src="@drawable/round_music_note_24"
+        android:tint="@android:color/white" />
+
+    <!-- Pass-through toggle -->
     <ImageButton
         android:id="@+id/overlay_ctrl_touch_toggle"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/overlay_touch_through_off"
-        android:padding="8dp"
+        android:padding="7dp"
         android:src="@drawable/baseline_drag_handle_24"
         android:tint="@android:color/white" />
 
+    <!-- Close -->
     <ImageButton
         android:id="@+id/overlay_ctrl_close"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/overlay_stop"
-        android:padding="8dp"
+        android:padding="7dp"
         android:src="@drawable/baseline_close_24"
         android:tint="@android:color/white" />
 
 </LinearLayout>
+
 

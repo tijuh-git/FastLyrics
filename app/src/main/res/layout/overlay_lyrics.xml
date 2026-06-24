@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/overlay_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -7,49 +8,21 @@
     android:orientation="vertical"
     android:padding="12dp">
 
-    <LinearLayout
+    <!-- Synced LyricViewX (used when LRC available) -->
+    <com.dirror.lyricviewx.LyricViewX
+        android:id="@+id/overlay_lyric_view_x"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_height="200dp"
+        android:visibility="gone"
+        app:lrcPadding="8dp" />
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/overlay_title"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-            android:textColor="@android:color/white" />
-
-        <ImageButton
-            android:id="@+id/overlay_button_touch_toggle"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/overlay_touch_through_off"
-            android:padding="6dp"
-            android:src="@drawable/baseline_drag_handle_24"
-            android:tint="@android:color/white" />
-
-        <ImageButton
-            android:id="@+id/overlay_button_close"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/overlay_stop"
-            android:padding="6dp"
-            android:src="@drawable/baseline_close_24"
-            android:tint="@android:color/white" />
-    </LinearLayout>
-
+    <!-- Static lyrics (fallback) -->
     <TextView
         android:id="@+id/overlay_text_lyrics"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:lineSpacingExtra="3dp"
-        android:maxLines="10"
-        android:scrollbars="vertical"
+        android:maxLines="12"
         android:text="..."
         android:textColor="@android:color/white"
         android:textSize="18sp" />

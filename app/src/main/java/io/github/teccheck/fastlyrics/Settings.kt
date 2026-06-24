@@ -41,6 +41,12 @@ class Settings(context: Context) {
         sharedPreferences.edit().putBoolean(KEY_OVERLAY_RUNNING, running).commit()
     }
 
+    fun getOverlayLastError(): String? = sharedPreferences.getString(KEY_OVERLAY_LAST_ERROR, null)
+
+    fun setOverlayLastError(error: String?) {
+        sharedPreferences.edit().putString(KEY_OVERLAY_LAST_ERROR, error).commit()
+    }
+
     companion object {
         private const val KEY_APP_THEME = "app_theme"
         private const val KEY_MATERIAL_STYLE = "material_style"
@@ -49,6 +55,7 @@ class Settings(context: Context) {
         private const val KEY_TEXT_SIZE = "text_size"
         private const val KEY_FULLSCREEN_LYRICS = "fullscreen_lyrics"
         private const val KEY_OVERLAY_RUNNING = "overlay_running"
+        private const val KEY_OVERLAY_LAST_ERROR = "overlay_last_error"
 
         private const val MATERIAL_STYLE_ONE = "1"
         private const val MATERIAL_STYLE_TWO = "2"

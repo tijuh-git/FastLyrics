@@ -63,6 +63,7 @@ class LyricsOverlayService : Service() {
             }
         }.onFailure {
             Log.e(TAG, "Overlay command failure", it)
+            appSettings.setOverlayLastError("command: ${it.javaClass.simpleName}: ${it.message ?: "unknown"}")
             stopSelf()
         }
 
@@ -79,6 +80,7 @@ class LyricsOverlayService : Service() {
         if (overlayView != null) return
 
         if (!hasOverlayPermission()) {
+            appSettings.setOverlayLastError("permission: canDrawOverlays=false")
             appSettings.setOverlayServiceRunning(false)
             stopSelf()
             return
@@ -116,6 +118,7 @@ class LyricsOverlayService : Service() {
             windowManager.addView(view, params)
         }.onFailure {
             Log.e(TAG, "Failed to add overlay view", it)
+            appSettings.setOverlayLastError("addView: ${it.javaClass.simpleName}: ${it.message ?: "unknown"}")
             appSettings.setOverlayServiceRunning(false)
             stopSelf()
             return
@@ -126,6 +129,7 @@ class LyricsOverlayService : Service() {
         touchToggleButton = buttonTouchToggle
         layoutParams = params
         appSettings.setOverlayServiceRunning(true)
+        appSettings.setOverlayLastError(null)
 
         syncTouchToggleUi()
     }
@@ -238,6 +242,7 @@ class LyricsOverlayService : Service() {
         const val EXTRA_LYRICS = "extra_lyrics"
     }
 }
+
 
 
 

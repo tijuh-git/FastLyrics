@@ -321,6 +321,7 @@ class FastLyricsFragment : Fragment() {
         runCatching {
             // Reset stale shared state before starting a fresh overlay instance.
             settings.setOverlayServiceRunning(false)
+            settings.setOverlayLastError(null)
             val overlayIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
                 action = LyricsOverlayService.ACTION_START
                 putExtra(LyricsOverlayService.EXTRA_LYRICS, lyricsViewModel.state.getLyrics())
@@ -344,7 +345,13 @@ class FastLyricsFragment : Fragment() {
                         )
                     }
                 } else {
-                    Toast.makeText(requireContext(), getString(R.string.overlay_not_visible), Toast.LENGTH_LONG).show()
+                    val detail = settings.getOverlayLastError().orEmpty()
+                    val message = if (detail.isBlank()) {
+                        getString(R.string.overlay_not_visible)
+                    } else {
+                        getString(R.string.overlay_not_visible_with_reason, detail)
+                    }
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
                 }
             }, 500)
         }.onFailure {

@@ -8,6 +8,7 @@ import android.os.IBinder
 import android.provider.Settings as AndroidSettings
 import android.util.Log
 import android.view.Gravity
+import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -86,7 +87,8 @@ class LyricsOverlayService : Service() {
             return
         }
 
-        val view = LayoutInflater.from(this).inflate(R.layout.overlay_lyrics, null)
+        val themedContext = ContextThemeWrapper(this, R.style.Theme_FastLyrics_Material2)
+        val view = LayoutInflater.from(themedContext).inflate(R.layout.overlay_lyrics, null)
         val textLyrics = view.findViewById<TextView>(R.id.overlay_text_lyrics)
         val buttonClose = view.findViewById<ImageButton>(R.id.overlay_button_close)
         val buttonTouchToggle = view.findViewById<ImageButton>(R.id.overlay_button_touch_toggle)

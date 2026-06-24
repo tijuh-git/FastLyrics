@@ -300,6 +300,7 @@ class FastLyricsFragment : Fragment() {
         if (isOverlayRunning) {
             stopOverlayIfRunning()
             updateOverlayButtonState()
+            Toast.makeText(requireContext(), getString(R.string.overlay_stopped), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -322,6 +323,18 @@ class FastLyricsFragment : Fragment() {
             requireContext().startService(overlayIntent)
             isOverlayRunning = true
             updateOverlayButtonState()
+            Toast.makeText(requireContext(), getString(R.string.overlay_started), Toast.LENGTH_SHORT).show()
+
+            // Move app to background so the floating lyrics can be seen above other apps.
+            val moved = requireActivity().moveTaskToBack(true)
+            if (!moved) {
+                startActivity(
+                    Intent(Intent.ACTION_MAIN).apply {
+                        addCategory(Intent.CATEGORY_HOME)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                )
+            }
         }.onFailure {
             Log.e(TAG, "Failed to start overlay service", it)
             Toast.makeText(requireContext(), getString(R.string.overlay_start_failed), Toast.LENGTH_LONG).show()

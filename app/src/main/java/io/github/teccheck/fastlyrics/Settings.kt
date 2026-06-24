@@ -55,6 +55,14 @@ class Settings(context: Context) {
         sharedPreferences.edit().putInt(KEY_OVERLAY_ALPHA, value.coerceIn(10, 100)).apply()
     }
 
+    /** Width as percent of screen width: 30..100 */
+    fun getOverlayWidthPercent(): Int =
+        sharedPreferences.getInt(KEY_OVERLAY_WIDTH_PCT, 75)
+
+    fun setOverlayWidthPercent(pct: Int) {
+        sharedPreferences.edit().putInt(KEY_OVERLAY_WIDTH_PCT, pct.coerceIn(30, 100)).apply()
+    }
+
     /** "S", "M", "L" */
     fun getOverlaySize(): String =
         sharedPreferences.getString(KEY_OVERLAY_SIZE, DEFAULT_OVERLAY_SIZE) ?: DEFAULT_OVERLAY_SIZE
@@ -74,6 +82,7 @@ class Settings(context: Context) {
         private const val KEY_OVERLAY_LAST_ERROR = "overlay_last_error"
         private const val KEY_OVERLAY_ALPHA = "overlay_alpha"
         private const val KEY_OVERLAY_SIZE = "overlay_size"
+        private const val KEY_OVERLAY_WIDTH_PCT = "overlay_width_pct"
 
         private const val MATERIAL_STYLE_ONE = "1"
         private const val MATERIAL_STYLE_TWO = "2"

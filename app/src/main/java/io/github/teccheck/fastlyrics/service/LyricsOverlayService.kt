@@ -166,19 +166,20 @@ class LyricsOverlayService : Service() {
             overlayWindowType(), WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT
         ).apply { gravity = Gravity.TOP or Gravity.END; y = topY }
 
-        // ✕ = stop float mode entirely (same as "STOP FLOAT" button in main app)
+        // ✕ = close overlay service, stay wherever you are
         btnClose.setOnClickListener { stopSelf() }
-        // ≡ = toggle pass-through (overlay-specific)
+        // ≡ = pass-through toggle
         btnToggle.setOnClickListener { setTouchThrough(!isTouchThrough) }
-        // → = exit float mode and return to app (same as clicking "STOP FLOAT" but stay in app)
+        // ↑↑ = exit float mode AND restore FastLyrics full view (no duplicate)
         btnOpenApp.setOnClickListener {
-            stopSelf() // stop overlay
-            startActivity(Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            })
+            stopSelf()
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
         }
-        // ⚙ = overlay-specific settings (size, bg transparency)
-        btnSettings.setOnClickListener { toggleSettingsPanel(themedContext, lParams.y) }
+        // ⚙ = overlay-specific settings panel
+        btnSettings.setOnClickListener { toggleSettingsPanel(themedContext, ctrlParams.y) }
 
         runCatching { windowManager.addView(ctrlView, ctrlParams) }
             .onFailure { Log.w(TAG, "Controls window failed", it) }
@@ -214,41 +215,59 @@ class LyricsOverlayService : Service() {
 
         val sv = LayoutInflater.from(ctx).inflate(R.layout.overlay_settings, null)
         val alpha = appSettings.getOverlayBackgroundAlpha()
+        val widthPct = appSettings.getOverlayWidthPercent()
+
+        // Fermeture au clic EXTÉRIEUR via FLAG_WATCH_OUTSIDE_TOUCH
         val sParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
-            overlayWindowType(), WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT
+            overlayWindowType(),
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+            PixelFormat.TRANSLUCENT
         ).apply { gravity = Gravity.TOP or Gravity.END; y = nearY + 80 }
 
         val alphaSlider = sv.findViewById<SeekBar>(R.id.overlay_alpha_slider)
         val alphaLabel  = sv.findViewById<TextView>(R.id.overlay_alpha_value)
-        val btnS = sv.findViewById<Button>(R.id.overlay_size_s)
-        val btnM = sv.findViewById<Button>(R.id.overlay_size_m)
-        val btnL = sv.findViewById<Button>(R.id.overlay_size_l)
-        val btnClose = sv.findViewById<Button>(R.id.overlay_settings_close)
+        val sizeSlider  = sv.findViewById<SeekBar>(R.id.overlay_size_slider)
+        val sizeLabel   = sv.findViewById<TextView>(R.id.overlay_size_value)
 
+        // Alpha: SeekBar 0..90 → value 10..100
         alphaSlider.progress = (alpha - 10).coerceIn(0, 90)
         alphaLabel.text = "$alpha%"
 
-        alphaSlider.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: android.widget.SeekBar?, p: Int, fromUser: Boolean) {
+        // Width: SeekBar 0..70 → value 30..100%
+        sizeSlider.progress = (widthPct - 30).coerceIn(0, 70)
+        sizeLabel.text = "$widthPct%"
+
+        alphaSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
                 val v = p + 10; alphaLabel.text = "$v%"
                 if (fromUser) { appSettings.setOverlayBackgroundAlpha(v); applyBackgroundAlpha(lyricsWindowView) }
             }
-            override fun onStartTrackingTouch(sb: android.widget.SeekBar?) = Unit
-            override fun onStopTrackingTouch(sb: android.widget.SeekBar?) = Unit
+            override fun onStartTrackingTouch(sb: SeekBar?) = Unit
+            override fun onStopTrackingTouch(sb: SeekBar?) = Unit
         })
 
-        fun applySize(s: String) {
-            appSettings.setOverlaySize(s)
-            lyricsParams?.let { p ->
-                p.width = sizeWidthPx(resources.displayMetrics.widthPixels)
-                lyricsWindowView?.let { windowManager.updateViewLayout(it, p) }
+        sizeSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                val pct = p + 30; sizeLabel.text = "$pct%"
+                if (fromUser) {
+                    appSettings.setOverlayWidthPercent(pct)
+                    lyricsParams?.let { lp ->
+                        lp.width = (resources.displayMetrics.widthPixels * pct / 100f).toInt()
+                        lyricsWindowView?.let { windowManager.updateViewLayout(it, lp) }
+                    }
+                }
             }
+            override fun onStartTrackingTouch(sb: SeekBar?) = Unit
+            override fun onStopTrackingTouch(sb: SeekBar?) = Unit
+        })
+
+        // Tap extérieur → ferme le panneau
+        sv.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_OUTSIDE) {
+                toggleSettingsPanel(ctx, nearY); true
+            } else false
         }
-        btnS.setOnClickListener { applySize("S") }
-        btnM.setOnClickListener { applySize("M") }
-        btnL.setOnClickListener { applySize("L") }
-        btnClose.setOnClickListener { toggleSettingsPanel(ctx, nearY) }
 
         runCatching { windowManager.addView(sv, sParams) }
             .onFailure { Log.w(TAG, "Settings window failed", it) }
@@ -264,8 +283,8 @@ class LyricsOverlayService : Service() {
     }
 
     private fun sizeWidthPx(screenW: Int): Int {
-        val ratio = when (appSettings.getOverlaySize()) { "S" -> 0.50f; "L" -> 0.95f; else -> 0.75f }
-        return (screenW * ratio).roundToInt()
+        val pct = appSettings.getOverlayWidthPercent()
+        return (screenW * pct / 100f).toInt()
     }
 
     private fun loadLyrics(plain: String, synced: String?) {
@@ -383,4 +402,9 @@ class LyricsOverlayService : Service() {
         const val EXTRA_ARTIST = "extra_artist"
     }
 }
+
+
+
+
+
 

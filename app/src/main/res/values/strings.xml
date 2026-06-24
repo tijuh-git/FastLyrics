@@ -29,6 +29,8 @@
     <string name="menu_copy" translatable="false">Copy</string>
     <string name="menu_share" translatable="false">Share</string>
     <string name="menu_source" translatable="false">Source</string>
+    <string name="toggle_fullscreen_enter">Reduce</string>
+    <string name="toggle_fullscreen_exit">Restore</string>
 
     <!-- Saved songs view -->
     <string name="delete">Delete</string>

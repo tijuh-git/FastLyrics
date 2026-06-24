@@ -36,8 +36,6 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import com.squareup.picasso.Picasso
 import android.graphics.drawable.BitmapDrawable
-import java.util.Timer
-import kotlin.concurrent.timer
 
 class FastLyricsFragment : Fragment() {
 
@@ -51,12 +49,6 @@ class FastLyricsFragment : Fragment() {
 
     private var isFullscreenMode = false
     private lateinit var doubleTapDetector: GestureDetector
-
-    // Auto-fullscreen settings
-    private var autoFullscreenTimer: Timer? = null
-    private var autoFullscreenDisabled = false
-    private val AUTO_FULLSCREEN_DELAY = 4000L // 4 seconds
-    private val AUTO_FULLSCREEN_DISABLE_DURATION = 15000L // 15 seconds after manual toggle
 
     private val menuProvider = object : MenuProvider {
         override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
@@ -128,38 +120,12 @@ class FastLyricsFragment : Fragment() {
         binding.scrollView.setOnTouchListener(onLyricsTouch)
         binding.lyricsView.textLyrics.setOnTouchListener(onLyricsTouch)
         binding.lyricsView.lyricViewX.setOnTouchListener(onLyricsTouch)
+        binding.lyricsView.toggleFullscreen.setOnClickListener { toggleFullscreenMode() }
 
         isFullscreenMode = settings.getFullscreenLyricsMode()
         applyFullscreenMode(isFullscreenMode)
 
         return binding.root
-    }
-
-    private fun startAutoFullscreenTimer() {
-        if (autoFullscreenDisabled || isFullscreenMode) return
-
-        cancelAutoFullscreenTimer()
-        autoFullscreenTimer = timer(initialDelay = AUTO_FULLSCREEN_DELAY, period = 0) {
-            requireActivity().runOnUiThread {
-                applyFullscreenMode(true)
-            }
-            cancel()
-        }
-    }
-
-    private fun cancelAutoFullscreenTimer() {
-        autoFullscreenTimer?.cancel()
-        autoFullscreenTimer = null
-    }
-
-    private fun disableAutoFullscreenTemporarily() {
-        autoFullscreenDisabled = true
-        cancelAutoFullscreenTimer()
-
-        timer(initialDelay = AUTO_FULLSCREEN_DISABLE_DURATION, period = 0) {
-            autoFullscreenDisabled = false
-            cancel()
-        }
     }
 
     override fun onResume() {
@@ -171,7 +137,6 @@ class FastLyricsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        cancelAutoFullscreenTimer()
         _binding = null
     }
 
@@ -179,18 +144,22 @@ class FastLyricsFragment : Fragment() {
         isFullscreenMode = !isFullscreenMode
         settings.setFullscreenLyricsMode(isFullscreenMode)
         applyFullscreenMode(isFullscreenMode)
-
-        // If toggling to normal mode (exit fullscreen), disable auto-fullscreen temporarily
-        if (!isFullscreenMode) {
-            disableAutoFullscreenTemporarily()
-        }
     }
 
     private fun applyFullscreenMode(fullscreen: Boolean) {
         isFullscreenMode = fullscreen
         binding.header.root.setVisible(!fullscreen)
-        binding.lyricsView.footer.setVisible(!fullscreen)
+        binding.lyricsView.footer.setVisible(true)
         binding.lyricsView.lyricViewX.setVisible(true)
+
+        binding.lyricsView.source.setVisible(!fullscreen)
+        binding.lyricsView.copy.setVisible(!fullscreen)
+        binding.lyricsView.share.setVisible(!fullscreen)
+
+        binding.lyricsView.toggleFullscreen.apply {
+            setIconResource(if (fullscreen) R.drawable.baseline_close_24 else R.drawable.baseline_open_in_new_24)
+            text = getString(if (fullscreen) R.string.toggle_fullscreen_exit else R.string.toggle_fullscreen_enter)
+        }
     }
 
     private fun setNewState(state: UiState) {
@@ -246,19 +215,13 @@ class FastLyricsFragment : Fragment() {
             share(requireContext(), state.getSongTitle(), state.getSongArtist(), state.getLyrics())
         }
 
-        // Re-apply chrome visibility after state updates to keep fullscreen stable across refreshes.
-        binding.lyricsView.footer.setVisible(!isFullscreenMode)
+        // Keep the fullscreen toggle available while restoring screen chrome state.
+        applyFullscreenMode(isFullscreenMode)
 
         showSynced(binding.header.syncedLyricsSwitch.isChecked)
 
         if (state.startRefresh) loadLyricsForCurrentSong()
 
-        // Start auto-fullscreen timer when lyrics are displayed
-        if (state.showText) {
-            startAutoFullscreenTimer()
-        } else {
-            cancelAutoFullscreenTimer()
-        }
 
         // Apply settings
         lyricsViewModel.autoRefresh = settings.getIsAutoRefreshEnabled()

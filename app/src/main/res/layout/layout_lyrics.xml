@@ -39,10 +39,29 @@
             android:padding="8dp">
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/toggle_fullscreen"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="32dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="@string/toggle_fullscreen_enter"
+                android:textSize="11sp"
+                app:cornerRadius="16dp"
+                app:icon="@drawable/baseline_open_in_new_24"
+                app:iconSize="14dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/source"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
                 android:insetLeft="0dp"
                 android:insetTop="0dp"
                 android:insetRight="0dp"

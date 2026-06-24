@@ -206,7 +206,10 @@ class LyricsOverlayService : Service() {
     }
 
     private fun removeOverlay() {
-        overlayView?.let { windowManager.removeView(it) }
+        overlayView?.let {
+            runCatching { windowManager.removeView(it) }
+                .onFailure { error -> Log.w(TAG, "Overlay removeView ignored", error) }
+        }
         overlayView = null
         lyricsView = null
         touchToggleButton = null
@@ -291,6 +294,7 @@ class LyricsOverlayService : Service() {
         const val EXTRA_LYRICS = "extra_lyrics"
     }
 }
+
 
 
 

@@ -303,7 +303,7 @@ class FastLyricsFragment : Fragment() {
         refreshOverlayState()
 
         if (isOverlayRunning) {
-            stopOverlayIfRunning()
+            stopOverlayIfRunning(forceReset = true)
             return
         }
 
@@ -319,6 +319,8 @@ class FastLyricsFragment : Fragment() {
         }
 
         runCatching {
+            // Reset stale shared state before starting a fresh overlay instance.
+            settings.setOverlayServiceRunning(false)
             val overlayIntent = Intent(requireContext(), LyricsOverlayService::class.java).apply {
                 action = LyricsOverlayService.ACTION_START
                 putExtra(LyricsOverlayService.EXTRA_LYRICS, lyricsViewModel.state.getLyrics())
@@ -341,6 +343,8 @@ class FastLyricsFragment : Fragment() {
                             }
                         )
                     }
+                } else {
+                    Toast.makeText(requireContext(), getString(R.string.overlay_not_visible), Toast.LENGTH_LONG).show()
                 }
             }, 500)
         }.onFailure {
@@ -349,7 +353,7 @@ class FastLyricsFragment : Fragment() {
         }
     }
 
-    private fun stopOverlayIfRunning() {
+    private fun stopOverlayIfRunning(forceReset: Boolean = false) {
         if (!isOverlayRunning) return
 
         runCatching {
@@ -359,6 +363,10 @@ class FastLyricsFragment : Fragment() {
             requireContext().startService(stopIntent)
             binding.root.postDelayed({
                 refreshOverlayState()
+                if (forceReset && isOverlayRunning) {
+                    settings.setOverlayServiceRunning(false)
+                    refreshOverlayState()
+                }
                 updateOverlayButtonState()
                 if (!isOverlayRunning) {
                     Toast.makeText(requireContext(), getString(R.string.overlay_stopped), Toast.LENGTH_SHORT).show()
